@@ -1,0 +1,106 @@
+
+* {
+    outline: 1px white;
+}
+
+body{
+    margin: 0;
+    padding: 0;
+    font-family: 'Open Sans', sans-serif;
+    
+}
+
+
+
+
+html {
+    font-size: 16px;
+
+}
+
+#header{
+    display: flex;
+    justify-content: space-between;
+    height: 10%;
+    
+
+}
+
+.logo {
+    width: 50%;
+    align-content: center;
+ 
+
+}
+.logo div{
+    text-align: left;
+    font-size: 130%;
+    font-weight: 900;
+    
+}
+
+#navigationbar{
+    display:flex;
+    justify-content: right;
+    width: 50%;
+    margin: auto;
+}
+.ul{
+    
+}
+.ul li {
+    display: inline;
+    margin-right: 10px;
+    font-weight: 800;
+    font-size: 120%;
+}
+#main{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    overflow: hidden;
+    height: 90vh;
+}
+
+.description{
+    flex-direction: column;
+    height: 100%;
+    width: 50%;
+    align-content: center;
+    justify-content: center;
+    margin: auto;
+
+}
+.greeting, .profesion{
+    display: flex;
+    width: 60%;
+    align-content: center;
+    justify-content: center;
+    margin: auto;
+}
+
+.profesion{
+    font-size: 250%;
+}
+
+
+#aside{
+    width: 50%;
+    height: 100%;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    
+    
+
+}
+
+.wagner-profile-picture{
+
+    height: 70%;
+    width: 70%;
+    margin:auto;
+    
+    
+    
+}
