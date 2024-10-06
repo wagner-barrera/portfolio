@@ -9,12 +9,12 @@
 <body>
     <header id="header">
         <div class="logo">
-            <div>PORTFOLIO</div>
+            <div>My Portfolio</div>
         </div>
     <nav id="navigationbar">
         <ul class="ul">
             <li class="li">Curriculum</li>
-            <li class="li">Contact</li>
+            <li class="li"><a href="#form-section">Contact</a></li>
             <li class="li">Proyects</li>
         </ul>
 
@@ -25,6 +25,7 @@
         <section class="description">
             <p class="greeting">Hey, I'm Wagner Barrera</p>
             <h1 class="profesion">Web Developer</h1>
+            <a href="#form-section"><button class="button" id="contact-button">Contact</button></a>
         </section>
             
         <aside id="aside">
@@ -33,6 +34,31 @@
         </aside>
         
     </main>
+    <section class="empty">
+
+    </section>
+    <section  id="form-section"  class="form-section" >
+        <form action="https://formspree.io/f/mwpkebrz" method="POST">
+            <div class="form-header">Contact Form</div>
+                <label for="name" class="form-label">Name
+                    <input type='text' id="name" name="name" class="form-input" placeholder="Insert Your Name" required>
+                </label>
+                    
+                <label for="subject" class="form-label">Subject
+                    <input type="text" id="subject" name="subject" class="form-input" placeholder="Reason of contact" required>
+                </label>
+                    
+                <label for="message" class="form-label">Message
+                    <input type="text" id="message" name="message" class="form-input" placeholder="Write your message here" required>
+
+                </label>
+                <button type="submit" class="button" id="form-submit--button">Submit</button>
+                    
+
+        </form>
+    </section>
+
+
     
    
    
