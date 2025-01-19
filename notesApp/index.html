@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+	<head lang="en">
+		<meta charset="utf-8" />
+		<link href="styles.css" rel="stylesheet" />
+		<script src="scripts.js" defer></script>
+		<title>Notes App</title>
+	</head>
+
+	<body>
+		<!-- <div class="back">＜</div> -->
+		<div class="form-container">
+			<form id="form">
+				<textarea
+					id="nameText"
+					placeholder="Customer information:"
+					class="input"
+				></textarea>
+				<textarea
+					id="issueText"
+					placeholder="Issue:"
+					class="input"
+				></textarea>
+				<textarea
+					id="actionText"
+					placeholder="Action:"
+					class="input"
+				></textarea>
+				<textarea
+					id="resolutionText"
+					placeholder="Resolution:"
+					class="input"
+				></textarea>
+				<div class="buttonsArea">
+					<button
+						type="button"
+						id="copyButton"
+						class="copyButton"
+					>
+						Copy
+					</button>
+					<button class="clearButton" type="submit">
+						Clear
+					</button>
+				</div>
+			</form>
+		</div>
+	</body>
+</html>
