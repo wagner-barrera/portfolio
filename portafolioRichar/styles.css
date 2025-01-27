@@ -1,0 +1,153 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+html {
+	width: 100%;
+	height: 100%;
+	font-family: 'Inter', sans-serif;
+	color: #343a40;
+}
+
+body {
+	width: 100%;
+	height: 100%;
+	display: grid;
+
+	grid-template-rows: 50px 0.5fr 1fr 0.5fr 50px;
+	grid-template-columns: 40% 60%;
+	row-gap: 25px;
+}
+
+.richar-picture {
+	width: 100%;
+	height: 100%;
+
+	/* width: 100px;
+	height: 100px; */
+}
+
+nav {
+	display: flex;
+	grid-column: 1 / -1;
+	grid-row: 1 / 2;
+
+	justify-content: space-between;
+	align-items: center;
+	padding: 0px 20px;
+}
+
+nav p {
+	font-size: 24px;
+}
+
+nav ul {
+	display: flex;
+	gap: 10px;
+}
+
+li {
+	text-decoration: none;
+	list-style: none;
+	font-size: 24px;
+	padding: 5px;
+}
+
+li:hover {
+	border-bottom: solid #3bc9db 2px;
+}
+
+main {
+	display: grid;
+	grid-template-rows: 1fr 1fr 3fr;
+
+	/* border: solid red 1px; */
+	grid-column: 1 / 2;
+	grid-row: 3 / 4;
+	justify-items: center;
+	align-items: center;
+	padding: 80px;
+}
+
+main h1 {
+	grid-row: 2 / 3;
+	grid-column: 1 / -1;
+	align-self: center;
+	justify-self: center;
+	font-weight: 600;
+}
+
+main h2 {
+	align-self: end;
+	justify-self: center;
+	font-weight: 400;
+	grid-row: 2 / 3;
+	grid-column: 1 / -1;
+}
+
+main h3 {
+	align-self: center;
+	grid-row: 3 / -1;
+	grid-column: 1 / -1;
+}
+
+.contact-btn {
+	/* border: solid black 0.1px; */
+	padding: 11px 21px;
+	border-radius: 1rem;
+	background-color: #3bc9db;
+	letter-spacing: 1.3px;
+	font-weight: 400;
+}
+
+.contact-btn:hover {
+	background-color: #66d9e8;
+}
+a:link,
+a:visited {
+	text-decoration: none;
+	color: #212529;
+}
+
+a:hover,
+a:active {
+	/* background-color: #66d9e8; */
+	cursor: pointer;
+}
+
+aside {
+	display: grid;
+	grid-column: 2 / 3;
+	/* border: solid red 1px; */
+	grid-row: 3 / 4;
+	padding: 80px;
+}
+
+.circle-container {
+	background-color: #e3fafc;
+	width: 100%;
+	height: 100%;
+	padding: 20px;
+	border-radius: 10% 50%;
+}
+
+img {
+	justify-self: center;
+	align-self: center;
+}
+
+footer {
+	display: grid;
+	justify-items: end;
+	align-items: center;
+	padding-right: 40px;
+	grid-column: 1 / -1;
+	grid-row: 5 / 6;
+	border-bottom: solid #3bc9db 4px;
+}
+
+footer p {
+	color: #495057;
+}

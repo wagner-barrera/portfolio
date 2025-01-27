@@ -1,0 +1,452 @@
+/* 'UNIVERSAL SELECTOR'
+selectes all the elements on the page  */
+* {
+	/* border-top: 10px solid #1098ad; */
+	margin: 0;
+	padding: 0;
+	/*IMG 49.1 */
+	box-sizing: border-box;
+}
+
+/* Idealy put here properties bo to text only.
+Not all properties are inherited, most of inheritance is regarding text properties */
+
+/*  */
+body {
+	color: #444;
+	font-family: sans-serif;
+	border-top: 10px solid #1098ad;
+	/* IMG 39.1 */
+	position: relative;
+	/* img 39.2 */
+	/* in order to absolutely position an image, you have to relatively position the parent you want to have the relationship with */
+}
+/* trying to center the whole page */
+.container {
+	width: 1200px;
+	/* margin-left: auto;
+	margin-right: auto; */
+	margin: 0 auto;
+	/* position: relative; */
+}
+
+.main-header {
+	background-color: #dcdcdc;
+
+	/* padding: 20px;
+	padding-left: 40px;
+	padding-right: 40px; 
+	1st value is top and bottom, 2nd value is left and right*/
+	padding: 20px 40px;
+	/* margin-bottom: 60px; */
+	/* height: 80px; */
+}
+.post-header {
+	margin-bottom: 40px;
+}
+
+nav {
+	font-size: 18px;
+}
+
+.article {
+	margin-bottom: 60px;
+}
+
+aside {
+	background-color: #f7f7f7;
+	border-top: 5px solid #1098ad;
+	border-bottom: 5px solid #1098ad;
+	padding: 50px 40px;
+}
+/* SMALLER ELEMENTS */
+
+/*If a property repeats, we put it together on a list*/
+h1,
+h2,
+h3 {
+	color: #1098ad;
+}
+
+h1 {
+	font-size: 26px;
+
+	text-transform: uppercase;
+	font-style: italic;
+}
+
+h2 {
+	font-size: 40px;
+	margin-bottom: 30px;
+}
+
+h3 {
+	font-size: 30px;
+	margin-bottom: 20px;
+	margin-top: 40px;
+}
+
+h4 {
+	font-size: 20px;
+
+	text-transform: uppercase;
+	text-align: center;
+	margin-bottom: 30px;
+}
+
+p {
+	font-size: 22px;
+
+	line-height: 1.5;
+	margin-bottom: 15px;
+}
+
+ul,
+ol {
+	margin-left: 50px;
+	margin-bottom: 20px;
+}
+
+li {
+	font-size: 20px;
+	margin-bottom: 10px;
+}
+
+li:last-child {
+	margin-bottom: 0;
+}
+
+/*descendent selector. Not a good practice
+
+footer p {
+	font-size: 16px;
+}
+*/
+
+/*nested descendent selector. Not a good 
+practice
+
+article header p {
+	font-style: italic;
+}
+*/
+/*id selection is a good practice. ID selection can be assigned only to ONE element*/
+#author {
+	font-style: italic;
+	font-size: 18px;
+}
+
+#copyright {
+	font-size: 16px;
+}
+
+/*Class Selector. Always use this selector*/
+.related-author {
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.related {
+	list-style: none;
+	margin-left: 0;
+}
+
+body {
+	/* background-color: beige; */
+}
+
+/* "Pseudo Clases"*/
+
+/*automatically detects the first 'li' element of the list*/
+li:first-child {
+	font-weight: bold;
+}
+/* detects the last element of the list */
+li:last-child {
+	font-style: italic;
+}
+/* lets you choose the element by number (2, 3, 4, etc). (could use 'odd' or 'even' to chose the elements based on their ordinary number */
+li:nth-child(2) {
+	color: red;
+}
+
+/* This is a misconception. Keep pseudo clases for the 'lists' only. */
+article p:first-child {
+	color: purple;
+}
+
+/* LVHA */
+/* PSEUDO-CLASES FOR ANCHORS/LINKS */
+
+/* This targets only actual anchors with links */
+a:link {
+	color: #1098ad;
+	text-decoration: none;
+}
+/* when link has been visited before */
+a:visited {
+	/* always do visited the same color */
+	color: #1098ad;
+}
+
+/* when hovering over the link */
+a:hover {
+	color: orangered;
+	font-weight: bold;
+	/* define text decoration line - style - color */
+	text-decoration: underline wavy orangered;
+}
+/* when clicking */
+a:active {
+	background-color: black;
+	font-style: italic;
+}
+
+.post-img {
+	/* Only set height to 'auto' if you already specified the height in html and you need to keep it like that */
+
+	/* using percentages is relative to the parent container */
+	width: 100%;
+	height: auto;
+}
+
+nav a:link {
+	/* The <a> elements in the NAV are 'in-line elements' so we changed the display to add a top-margin (See IMG 38.1)*/
+	margin-right: 30px;
+	display: inline-block;
+}
+
+nav a:link:last-child {
+	margin-right: 0;
+}
+
+button {
+	font-size: 22px;
+	padding: 20px;
+	cursor: pointer;
+	/* absolute positioning sets location by default in relationship to the viewport (img 39.1) */
+
+	position: absolute;
+	/* top: 50px;
+	left: 50px; */
+	bottom: 50px;
+	right: 50px;
+}
+/* pseudo elements act like elements even though they were not declared */
+h1::first-letter {
+	font-style: normal;
+	margin-right: 5px;
+}
+
+/* First line of the paragraph adyacent to all H3 elements */
+h3 + p::first-line {
+	/* color: red; */
+}
+
+/* 'ADDING SOMETHING RIGHT AFTER ON AN ELEMENT'  */
+h2 {
+	/* background-color: orange; */
+	position: relative;
+}
+h2::after {
+	content: 'TOP';
+	background-color: #ffe70e;
+	color: #000;
+	font-size: 16px;
+	font-weight: bold;
+	display: inline-block;
+	/* in order to add padding and margins you have to display: inline-block */
+	padding: 5px 10px;
+	/* remember to position relative the parent*/
+	position: absolute;
+	top: -10px;
+	right: -25px;
+}
+/*
+
+/* -----------FLOATS--------------OUTDATED */
+/* img 46.1 
+.author-img {
+	float: left;
+}
+
+.author {
+	/* padding-left: 10px; 
+	margin-top: 10px;
+	float: left;
+	margin-left: 20px;
+}
+h1 {
+	float: left;
+}
+nav {
+	float: right;
+}
+.clear {
+	clear: both;
+}
+
+.clearfix::after {
+	clear: both;
+	content: '';
+	/* clearing floats like this only works on a block level 
+	display: block;
+}
+
+article {
+	/* background-color: green; 
+	width: 825px;
+	float: left;
+}
+aside {
+	/* background-color: red; 
+	width: 300px;
+	float: right;
+}
+footer {
+	/* background-color: yellow; 
+	clear: both;
+}
+*/
+
+.main-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.author-box {
+	display: flex;
+	align-items: center;
+	margin-bottom: 15px;
+}
+
+.author {
+	margin-bottom: 0;
+	margin-left: 15px;
+}
+
+.related-post {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	margin-bottom: 30px;
+}
+
+.related-link:link {
+	font-size: 17px;
+	font-weight: bold;
+	font-style: normal;
+	margin-bottom: 5px;
+	display: block;
+}
+
+.related-author {
+	margin-bottom: 0;
+	font-size: 14px;
+	font-weight: normal;
+	font-style: italic;
+}
+
+/*
+--------------------------------------------------------------------
+**FLEXBOX LAYOUT** */
+/* 
+.row {
+	display: flex;
+	align-items: flex-start;
+	gap: 75px;
+	margin-bottom: 60px;
+}
+
+article {
+ flex: 1 allows the element to grow as much as it can in the available space. 
+	flex: 1;
+}
+
+aside {
+	/* DEFAULTS
+	flex-grow: 0;
+	flex-shrink: 1;
+	flex-basis: auto;
+	 
+	flex: 0 0 300px;
+	-----------------------------------------------------------------
+} */
+
+/* CSS GRID LAYOUT */
+
+.container {
+	display: grid;
+	grid-template-columns: 1fr 300px;
+	column-gap: 75px;
+	row-gap: 60px;
+}
+
+.main-header {
+	grid-column: 1 / -1;
+}
+
+article {
+}
+
+aside {
+	align-self: start;
+}
+
+footer {
+	/* background-color: skyblue; */
+	grid-column: 1 / -1;
+}
+
+/* CONFLICTING DECLARATIONS-----------------
+When an element has the same declaration in various places, CSS will prioritize it like this:
+
+ 1. Highest priority is ID selector
+ 2. Class (.) or pseudo-class (:) selector
+ 3. Element selector (p, div, li, etc.)
+ 4. Universal selector (*)
+
+ If there is a conflict between elements of the same hierarchy, the priority will be upon the LAST element.
+
+ Inherrited values have the lowes priority
+
+ cheat: !important  -  this will assign the highest priority to anything 
+  
+
+#copyright {
+	color: red;
+}
+.copyright {
+	color: blue;
+}
+
+.text {
+	color: yellow;
+}
+footer p {
+	color: green;
+}
+--------------------------------------------
+ */
+
+/*WORKING WITH COLORS -----------------------
+RGB NOTATION
+  rgb(0, 255, 255)
+  rgba(RGB with transparency)("alpha")
+    rgba(0,244,244, 0.3)
+
+HEXADECIMAL NOTATION
+we go from 0 to ff (255 in hexadecimal numbers)
+  ##00ffff
+  shorthand, when all colors are identical pairs
+    #0ff
+
+Shades of grey
+when colors in all 3 channels are the same, we get grey color. There are 256 pure grays to choose from.
+ rgb(69,69,69)
+ #444444
+  shorthand #444
+rgb(183,183,183)
+#b7b7b7
+*/
