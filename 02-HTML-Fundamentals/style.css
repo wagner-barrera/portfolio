@@ -13,7 +13,8 @@ Not all properties are inherited, most of inheritance is regarding text properti
 
 /*  */
 body {
-	color: #444;
+	color: #ffffff;
+	background-color: #0a0a0a;
 	font-family: sans-serif;
 	border-top: 10px solid #1098ad;
 	/* IMG 39.1 */
@@ -31,7 +32,7 @@ body {
 }
 
 .main-header {
-	background-color: #dcdcdc;
+	background-color: #1a1a1a;
 
 	/* padding: 20px;
 	padding-left: 40px;
@@ -54,7 +55,7 @@ nav {
 }
 
 aside {
-	background-color: #f7f7f7;
+	background-color: #1a1a1a;
 	border-top: 5px solid #1098ad;
 	border-bottom: 5px solid #1098ad;
 	padding: 50px 40px;
