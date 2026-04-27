@@ -80,13 +80,54 @@
         <button id="secret-btn" class="secret-btn">Do Not Press</button>
     </footer>
 
+    <canvas id="snakeGame" width="400" height="400"></canvas>
+    
     <script>
         document.getElementById('secret-btn').addEventListener('click', function() {
-            var s = document.createElement('script');
-            s.type = 'text/javascript';
-            s.src = 'https://cdn.jsdelivr.net/gh/erkie/erkie.github.com@master/asteroids.min.js';
-            document.body.appendChild(s);
             this.style.display = 'none';
+            const canvas = document.getElementById('snakeGame');
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext('2d');
+            
+            let grid = 20;
+            let snake = [{x: 160, y: 160}, {x: 140, y: 160}, {x: 120, y: 160}];
+            let food = {x: 300, y: 300};
+            let dx = grid;
+            let dy = 0;
+            
+            document.addEventListener('keydown', function(e) {
+                if(e.key === 'ArrowLeft' && dx === 0) { dx = -grid; dy = 0; }
+                else if(e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -grid; }
+                else if(e.key === 'ArrowRight' && dx === 0) { dx = grid; dy = 0; }
+                else if(e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = grid; }
+            });
+
+            function loop() {
+                setTimeout(function() {
+                    requestAnimationFrame(loop);
+                    
+                    ctx.clearRect(0,0,canvas.width,canvas.height);
+                    
+                    let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+                    snake.unshift(head);
+                    
+                    if(head.x === food.x && head.y === food.y) {
+                        food.x = Math.floor(Math.random() * (canvas.width/grid)) * grid;
+                        food.y = Math.floor(Math.random() * (canvas.height/grid)) * grid;
+                    } else {
+                        snake.pop();
+                    }
+                    
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(food.x, food.y, grid-1, grid-1);
+                    
+                    ctx.fillStyle = '#3b82f6';
+                    snake.forEach(function(part, index) {
+                        ctx.fillRect(part.x, part.y, grid-1, grid-1);
+                    });
+                }, 100);
+            }
+            requestAnimationFrame(loop);
         });
     </script>
 </body>

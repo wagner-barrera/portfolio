@@ -292,6 +292,18 @@ footer {
     color: var(--accent);
 }
 
+#snakeGame {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--bg-color);
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 50px rgba(0,0,0,0.8);
+    z-index: 2000;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .hero {
