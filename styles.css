@@ -273,6 +273,23 @@ footer {
     color: var(--text-secondary);
     border-top: 1px solid var(--card-border);
     margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.secret-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.1); /* Very subtle */
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: var(--transition);
+}
+
+.secret-btn:hover {
+    color: var(--accent);
 }
 
 /* Responsive Design */

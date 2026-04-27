@@ -77,6 +77,17 @@
 
     <footer>
         <p>&copy; 2026 Wagner Barrera. All rights reserved.</p>
+        <button id="secret-btn" class="secret-btn">Do Not Press</button>
     </footer>
+
+    <script>
+        document.getElementById('secret-btn').addEventListener('click', function() {
+            var s = document.createElement('script');
+            s.type = 'text/javascript';
+            s.src = 'https://cdn.jsdelivr.net/gh/erkie/erkie.github.com@master/asteroids.min.js';
+            document.body.appendChild(s);
+            this.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
