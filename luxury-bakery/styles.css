@@ -47,7 +47,7 @@ p {
     padding: 0.5rem 2rem;
     display: flex;
     justify-content: flex-end;
-    font-size: 1.5rem;
+    font-size: 0.9rem;
 }
 
 .lang-toggle button {
@@ -60,6 +60,7 @@ p {
     margin: 0 0.5rem;
     transition: color 0.3s ease;
     opacity: 0.4;
+    font-size: 1rem;
 }
 
 .lang-toggle button.active, .lang-toggle button:hover {
