@@ -44,7 +44,7 @@ const translations = {
         't-nav-contact': 'Contacto',
         't-hero-title': 'Sabores Latinos Auténticos',
         't-hero-subtitle': 'Elaborados en cada pastel y repostería.',
-        't-hero-btn': 'Ordena en Toast',
+        't-hero-btn': 'Ordena Aquí',
         't-about-title': 'Conoce a la Dueña: Patty Guzman',
         't-about-p1': 'Patty, la orgullosa dueña de Lolly’s Bakery, comenzó su viaje en el pequeño campo de Jalisco, México, donde creció rodeada de los sonidos de las gallinas y los sueños de su familia.',
         't-about-p2': 'A sus 12 años, Patty emprendió el valiente viaje a los Estados Unidos, llevando consigo la esperanza y determinación que sus padres habían plantado en su corazón. Creció abrazando el trabajo duro, siguiendo cosechas junto a su familia y soñando con un futuro brillante.',
