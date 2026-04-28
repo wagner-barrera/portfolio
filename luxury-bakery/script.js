@@ -8,7 +8,7 @@ const translations = {
         't-nav-contact': 'Contact',
         't-hero-title': 'Authentic Latin Flavors',
         't-hero-subtitle': 'Crafted into Every Cake and Pastry.',
-        't-hero-btn': 'Order on Toast',
+        't-hero-btn': 'Order here',
         't-about-title': 'Meet the Owner: Patty Guzman',
         't-about-p1': 'Patty, the proud owner of Lolly’s Bakery, began her journey in the small countryside of Jalisco, Mexico, where she grew up surrounded by the sounds of chickens and the dreams of her family.',
         't-about-p2': 'At just 12 years old, Patty made the courageous journey to the United States, carrying with her the hope and determination her parents had planted in her heart. She grew up embracing hard work, following harvests alongside her family, and dreaming of a brighter future.',
@@ -68,7 +68,7 @@ const translations = {
         't-form-email': 'Correo Electrónico',
         't-form-message': 'Mensaje',
         't-form-submit': 'Enviar Mensaje',
-        't-footer-tagline': '¡Ofrecemos servicios de entrega y recogida!',
+        't-footer-tagline': '¡Ofrecemos entrega a domicilio!',
         't-footer-visit': 'Ubicaciones',
         't-footer-contact': 'Contáctanos'
     }
