@@ -896,3 +896,57 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ═══════════════════════════════════════════════════
+   PDF QUALITY PICKER
+═══════════════════════════════════════════════════ */
+.quality-picker {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.quality-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.quality-options {
+  display: flex;
+  background: var(--bg-input);
+  border: 1px solid var(--border-normal);
+  border-radius: 20px;
+  padding: 2px;
+  gap: 1px;
+}
+
+.quality-btn {
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  outline: none;
+}
+
+.quality-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+}
+
+.quality-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+  box-shadow: 0 0 8px rgba(56, 139, 253, 0.5);
+}
