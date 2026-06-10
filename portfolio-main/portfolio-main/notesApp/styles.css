@@ -439,7 +439,7 @@ body {
 /* Individual image card */
 .image-card {
   position: relative;
-  background: var(--bg-elevated);
+  background: #161b22;
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -465,7 +465,7 @@ body {
   height: auto;
   max-height: 520px;
   object-fit: contain;
-  background: var(--bg-card);
+  background: #161b22;
 }
 
 .image-card-actions {
