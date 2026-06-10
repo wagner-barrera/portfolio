@@ -1,8 +1,9 @@
+";
 'use strict';
 
-/* ═══════════════════════════════════════════════════
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
    DOM REFS
-═══════════════════════════════════════════════════ */
+Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 const copyButton      = document.getElementById('copyButton');
 const clearButton     = document.getElementById('clearButton');
 const statusBadge     = document.getElementById('statusBadge');
@@ -29,15 +30,15 @@ const panelLeft       = document.getElementById('panelLeft');
 const panelDivider    = document.getElementById('panelDivider');
 const panelRight      = document.getElementById('panelRight');
 
-/* ═══════════════════════════════════════════════════
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
    STATE
-═══════════════════════════════════════════════════ */
+Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 let images       = [];
 let imgIdCounter = 0;
 
-/* ═══════════════════════════════════════════════════
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
    UTILITIES
-═══════════════════════════════════════════════════ */
+Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 function showToast(msg, type = 'info', duration = 2500) {
   toast.textContent = msg;
   toast.className   = `toast show ${type}`;
@@ -77,9 +78,9 @@ function updateCanvasCount() {
   downloadPdfBtn.disabled = n === 0;
 }
 
-/* ═══════════════════════════════════════════════════
-   LEFT PANEL — COPY (HTML clipboard for bold labels)
-═══════════════════════════════════════════════════ */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+   LEFT PANEL Ã¢â‚¬â€ COPY (HTML clipboard for bold labels)
+Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 copyButton.addEventListener('click', async () => {
   const plain = buildNotePlain();
   const html  = buildNoteHTML();
@@ -97,7 +98,7 @@ copyButton.addEventListener('click', async () => {
       ]);
       copiedRich = true;
     } catch (e) {
-      // ClipboardItem blocked — fall through to plain text
+      // ClipboardItem blocked Ã¢â‚¬â€ fall through to plain text
     }
   }
 
@@ -110,14 +111,14 @@ copyButton.addEventListener('click', async () => {
     }
   }
 
-  copyButton.innerHTML = '<span class="btn-icon">✅</span><span class="btn-label">Copied!</span>';
+  copyButton.innerHTML = '<span class="btn-icon">Ã¢Å“â€¦</span><span class="btn-label">Copied!</span>';
   copyButton.classList.add('copied');
   statusBadge.textContent = 'Copied!';
   statusBadge.classList.add('copying');
-  showToast(copiedRich ? 'Copied with bold labels ✓' : 'Copied (plain text) ✓', 'success');
+  showToast(copiedRich ? 'Copied with bold labels Ã¢Å“â€œ' : 'Copied (plain text) Ã¢Å“â€œ', 'success');
 
   setTimeout(() => {
-    copyButton.innerHTML = '<span class="btn-icon btn-copy-icon">📋</span><span class="btn-label">Copy</span>';
+    copyButton.innerHTML = '<span class="btn-icon btn-copy-icon">Ã°Å¸â€œâ€¹</span><span class="btn-label">Copy</span>';
     copyButton.classList.remove('copied');
     statusBadge.textContent = 'Ready';
     statusBadge.classList.remove('copying');
@@ -134,9 +135,9 @@ clearButton.addEventListener('click', () => {
 allTextareas.forEach(ta => ta.addEventListener('input', updatePreview));
 updatePreview();
 
-/* ═══════════════════════════════════════════════════
-   RIGHT PANEL — IMAGE CANVAS
-═══════════════════════════════════════════════════ */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+   RIGHT PANEL Ã¢â‚¬â€ IMAGE CANVAS
+Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 function showCanvas() {
   canvasDropzone.style.display     = 'none';
   canvasScroll.style.display       = 'flex';
@@ -152,31 +153,50 @@ function maybeShowDropzone() {
 function addImage(dataUrl, name = '') {
   const id = ++imgIdCounter;
   const ts = new Date().toLocaleTimeString();
-  images.push({ id, dataUrl, name, timestamp: ts });
+  images.push({ id, dataUrl, name, timestamp: ts, caption: '' });
+  const idx = images.length - 1;
 
   const card      = document.createElement('div');
   card.className  = 'image-card';
   card.dataset.id = id;
 
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Editable caption (above the image) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+  const caption           = document.createElement('div');
+  caption.className       = 'image-caption';
+  caption.contentEditable = 'true';
+  caption.dataset.placeholder = 'Add a descriptionÃ¢â‚¬Â¦';
+  caption.title           = 'Click to add a description';
+  caption.addEventListener('input', () => {
+    images[idx].caption = caption.innerText.trim();
+  });
+  // Stop paste from propagating to global paste handler
+  caption.addEventListener('paste', e => e.stopPropagation());
+
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Image Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const img   = document.createElement('img');
   img.src     = dataUrl;
   img.alt     = name || `Screenshot ${id}`;
   img.loading = 'lazy';
+  img.title   = 'Double-click to zoom';
+  img.addEventListener('dblclick', () => openLightbox(idx));
 
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Actions (delete button) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const actions     = document.createElement('div');
   actions.className = 'image-card-actions';
 
   const deleteBtn       = document.createElement('button');
   deleteBtn.className   = 'img-action-btn';
   deleteBtn.title       = 'Remove image';
-  deleteBtn.textContent = '✕';
+  deleteBtn.textContent = 'Ã¢Å“â€¢';
   deleteBtn.addEventListener('click', () => removeImage(id, card));
   actions.appendChild(deleteBtn);
 
+  // Ã¢â€â‚¬Ã¢â€â‚¬ Footer label Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
   const label       = document.createElement('div');
   label.className   = 'image-label';
-  label.innerHTML   = `<span class="image-number">#${images.length}</span><span>${name || 'Screenshot'} · ${ts}</span>`;
+  label.innerHTML   = `<span class="image-number">#${images.length}</span><span>${name || 'Screenshot'} Ã‚Â· ${ts}</span>`;
 
+  card.appendChild(caption);
   card.appendChild(img);
   card.appendChild(actions);
   card.appendChild(label);
@@ -184,6 +204,8 @@ function addImage(dataUrl, name = '') {
 
   showCanvas();
   updateCanvasCount();
+  // Auto-focus the caption field so user can type right away
+  setTimeout(() => caption.focus(), 80);
   setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 }
 
@@ -209,7 +231,7 @@ function processFiles(files) {
     reader.onload = e => addImage(e.target.result, file.name);
     reader.readAsDataURL(file);
   });
-  showToast(`Adding ${imageFiles.length} image${imageFiles.length !== 1 ? 's' : ''}…`, 'info', 1500);
+  showToast(`Adding ${imageFiles.length} image${imageFiles.length !== 1 ? 's' : ''}Ã¢â‚¬Â¦`, 'info', 1500);
 }
 
 selectFileBtn.addEventListener('click', () => fileInput.click());
@@ -217,7 +239,7 @@ addMoreBtn.addEventListener('click',    () => fileInputExtra.click());
 fileInput.addEventListener('change',      e => { processFiles(e.target.files); e.target.value = ''; });
 fileInputExtra.addEventListener('change', e => { processFiles(e.target.files); e.target.value = ''; });
 
-/* — Drag & Drop — */
+/* Ã¢â‚¬â€ Drag & Drop Ã¢â‚¬â€ */
 [canvasDropzone, panelRight].forEach(el => {
   el.addEventListener('dragover',  e => { e.preventDefault(); canvasDropzone.classList.add('drag-over'); });
   el.addEventListener('dragleave', e => {
@@ -229,7 +251,7 @@ fileInputExtra.addEventListener('change', e => { processFiles(e.target.files); e
   });
 });
 
-/* — Paste (Ctrl+V) — */
+/* Ã¢â‚¬â€ Paste (Ctrl+V) Ã¢â‚¬â€ */
 document.addEventListener('paste', e => {
   const items = (e.clipboardData || e.originalEvent.clipboardData).items;
   let found   = false;
@@ -242,10 +264,10 @@ document.addEventListener('paste', e => {
       reader.readAsDataURL(file);
     }
   }
-  if (found) showToast('Screenshot added to canvas 🖼️', 'success');
+  if (found) showToast('Screenshot added to canvas Ã°Å¸â€“Â¼Ã¯Â¸Â', 'success');
 });
 
-/* — Clear canvas — */
+/* Ã¢â‚¬â€ Clear canvas Ã¢â‚¬â€ */
 clearCanvasBtn.addEventListener('click', () => {
   if (images.length === 0) return;
   if (!confirm(`Remove all ${images.length} image${images.length !== 1 ? 's' : ''} from the canvas?`)) return;
@@ -256,16 +278,16 @@ clearCanvasBtn.addEventListener('click', () => {
   showToast('Canvas cleared', 'info');
 });
 
-/* ═══════════════════════════════════════════════════
-   PDF GENERATION — Professional cover + centered images + watermark
+/* â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€” 
+   PDF GENERATION â€” Professional cover + centered images + watermark
    Uses jsPDF 2.5.1 (loaded dynamically from CDN)
-═══════════════════════════════════════════════════ */
+â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”  */
 downloadPdfBtn.addEventListener('click', async () => {
   if (images.length === 0) return;
 
   const overlay = document.createElement('div');
   overlay.className = 'pdf-overlay';
-  overlay.innerHTML = `<div class="pdf-spinner"><div class="spinner-ring"></div><p>Generating PDF…</p></div>`;
+  overlay.innerHTML = `<div class="pdf-spinner"><div class="spinner-ring"></div><p>Generating PDFâ€¦</p></div>`;
   document.body.appendChild(overlay);
 
   try {
@@ -287,7 +309,7 @@ downloadPdfBtn.addEventListener('click', async () => {
     const action     = actionText.value.trim();
     const resolution = resolutionText.value.trim();
 
-    /* ── COVER PAGE ─────────────────────────────────────────── */
+    /* â€”â€” COVER PAGE â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€”â€” */
 
     // Dark navy header band (top 50mm)
     pdf.setFillColor(15, 25, 50);
@@ -297,17 +319,22 @@ downloadPdfBtn.addEventListener('click', async () => {
     pdf.setFillColor(31, 111, 235);
     pdf.rect(0, 50, pageW, 3, 'F');
 
-    // "TRIMBLE" label — top right (white on dark)
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
-    pdf.setTextColor(88, 166, 255);
-    pdf.text('TRIMBLE', pageW - mg, 12, { align: 'right' });
+    // "TRIMBLE" label Ã¢â‚¬â€ top right (white on dark)
+    // Trimble Logo â€” top right
+    if (typeof TRIMBLE_LOGO_B64 !== 'undefined' && TRIMBLE_LOGO_B64.startsWith('data:image')) {
+      pdf.addImage(TRIMBLE_LOGO_B64, 'PNG', pageW - mg - 22, 6.5, 22, 5.3);
+    } else {
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(88, 166, 255);
+      pdf.text('TRIMBLE', pageW - mg, 12, { align: 'right' });
+    }
 
     // Vertical separator left accent
     pdf.setFillColor(31, 111, 235);
     pdf.rect(mg, 18, 1.2, 22, 'F');
 
-    // Title "CASE REPORT" — large white
+    // Title "CASE REPORT" Ã¢â‚¬â€ large white
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(24);
     pdf.setTextColor(230, 237, 243);
@@ -317,22 +344,22 @@ downloadPdfBtn.addEventListener('click', async () => {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
     pdf.setTextColor(139, 148, 158);
-    pdf.text('Technical Support Documentation  ·  Trimble Inc.', mg + 5, 40);
+    pdf.text('Technical Support Documentation  Ã‚Â·  Trimble Inc.', mg + 5, 40);
 
     // Date/time line below the stripe
     pdf.setFontSize(8.5);
     pdf.setTextColor(100, 110, 130);
-    pdf.text(`${dateStr}  ·  ${timeStr}`, mg, 62);
+    pdf.text(`${dateStr}  Ã‚Â·  ${timeStr}`, mg, 62);
 
     // Light separator line
     pdf.setDrawColor(220, 228, 240);
     pdf.setLineWidth(0.3);
     pdf.line(mg, 67, pageW - mg, 67);
 
-    /* ── Bitácora content ───────────────────────────────────── */
+    /* Ã¢â€â‚¬Ã¢â€â‚¬ BitÃƒÂ¡cora content Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
     let y = 77;
 
-    // Customer name (if provided) — bold, larger
+    // Customer name (if provided) Ã¢â‚¬â€ bold, larger
     if (customer) {
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(13);
@@ -368,7 +395,7 @@ downloadPdfBtn.addEventListener('click', async () => {
         pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(10);
         pdf.setTextColor(160, 170, 185);
-        pdf.text('—', mg + 6, y);
+        pdf.text('Ã¢â‚¬â€', mg + 6, y);
         y += 8;
       } else {
         pdf.setFont('helvetica', 'normal');
@@ -384,7 +411,7 @@ downloadPdfBtn.addEventListener('click', async () => {
     drawSection('ACTION',     200, 140, 30,  action);
     drawSection('RESOLUTION', 35,  155, 75,  resolution);
 
-    /* ── Cover footer ───────────────────────────────────────── */
+    /* Ã¢â€â‚¬Ã¢â€â‚¬ Cover footer Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
     // Light footer band
     pdf.setFillColor(240, 244, 252);
     pdf.rect(0, pageH - 26, pageW, 26, 'F');
@@ -401,36 +428,42 @@ downloadPdfBtn.addEventListener('click', async () => {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
     pdf.setTextColor(90, 105, 130);
-    pdf.text('Support Specialist  ·  Trimble Inc.', mg, pageH - 8);
+    pdf.text('Support Specialist  Ã‚Â·  Trimble Inc.', mg, pageH - 9);
+
+    // Email link
+    pdf.setTextColor(31, 111, 235);
+    pdf.textWithLink('wagner_barrera@trimble.com', mg, pageH - 4, { url: 'mailto:wagner_barrera@trimble.com' });
 
     // Right: page number
+    pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
     pdf.setTextColor(150, 160, 180);
-    pdf.text(`Page 1 of ${images.length + 1}`, pageW - mg, pageH - 8, { align: 'right' });
+    pdf.text(`Page 1 of ${images.length + 1}`, pageW - mg, pageH - 4, { align: 'right' });
 
-    /* ── IMAGE PAGES ─────────────────────────────────────────── */
+    /* Ã¢â€â‚¬Ã¢â€â‚¬ IMAGE PAGES Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
     for (let i = 0; i < images.length; i++) {
       pdf.addPage();
 
-      const { dataUrl } = images[i];
+      const { dataUrl, caption } = images[i];
       const dims  = await getImageDimensions(dataUrl);
       const ratio = dims.width / dims.height;
 
-      const headerH = 13;
-      const footerH = 13;
-      const availW  = pageW - mg * 2;
-      const availH  = pageH - headerH - footerH - mg * 2;
+      const headerH  = 13;
+      const footerH  = 13;
+      const captionH = caption ? 12 : 0; // reserve space if caption exists
+      const availW   = pageW - mg * 2;
+      const availH   = pageH - headerH - footerH - captionH - mg * 2;
 
       // Fit preserving aspect ratio
       let imgW = availW;
       let imgH = imgW / ratio;
       if (imgH > availH) { imgH = availH; imgW = imgH * ratio; }
 
-      // Center on page
+      // Center horizontally; push up slightly if there's a caption below
       const x  = mg + (availW - imgW) / 2;
       const y0 = headerH + mg + (availH - imgH) / 2;
 
-      /* ── Page header ── */
+      /* Ã¢â€â‚¬Ã¢â€â‚¬ Page header Ã¢â€â‚¬Ã¢â€â‚¬ */
       pdf.setFillColor(248, 250, 255);
       pdf.rect(0, 0, pageW, headerH, 'F');
       pdf.setDrawColor(215, 225, 242);
@@ -440,10 +473,10 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7.5);
       pdf.setTextColor(100, 115, 145);
-      pdf.text('CASE REPORT  ·  Trimble Inc.', mg, 9);
+      pdf.text('CASE REPORT  Ã‚Â·  Trimble Inc.', mg, 9);
       pdf.text(`Screenshot ${i + 1} of ${images.length}`, pageW - mg, 9, { align: 'right' });
 
-      /* ── Image ── */
+      /* Ã¢â€â‚¬Ã¢â€â‚¬ Image Ã¢â€â‚¬Ã¢â€â‚¬ */
       const fmt = dataUrl.startsWith('data:image/png') ? 'PNG' :
                   dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
       pdf.addImage(dataUrl, fmt, x, y0, imgW, imgH);
@@ -453,16 +486,17 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.setLineWidth(0.25);
       pdf.rect(x, y0, imgW, imgH);
 
-      /* ── Watermark — diagonal center ── */
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(22);
-      pdf.setTextColor(200, 208, 220);  // very light, subtle
-      pdf.text('Wagner A. Barrera', pageW / 2, pageH / 2, {
-        align: 'center',
-        angle: 45,
-      });
+      /* Ã¢â€â‚¬Ã¢â€â‚¬ Caption below image (if typed) Ã¢â€â‚¬Ã¢â€â‚¬ */
+      if (caption) {
+        const capY = y0 + imgH + 6;
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(9);
+        pdf.setTextColor(80, 95, 120);
+        const capLines = pdf.splitTextToSize(caption, availW);
+        pdf.text(capLines, pageW / 2, capY, { align: 'center' });
+      }
 
-      /* ── Page footer ── */
+      /* Ã¢â€â‚¬Ã¢â€â‚¬ Page footer Ã¢â€â‚¬Ã¢â€â‚¬ */
       pdf.setFillColor(248, 250, 255);
       pdf.rect(0, pageH - footerH, pageW, footerH, 'F');
       pdf.setDrawColor(215, 225, 242);
@@ -472,25 +506,28 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7.5);
       pdf.setTextColor(100, 115, 145);
-      pdf.text('Wagner A. Barrera  ·  Trimble Inc.', mg, pageH - 4);
+      pdf.text('Wagner A. Barrera  Ã‚Â·  Trimble Inc.', mg, pageH - 4);
       pdf.text(`Page ${i + 2} of ${images.length + 1}`, pageW - mg, pageH - 4, { align: 'right' });
     }
 
-    const filename = `case-report-${now.toISOString().slice(0, 10)}.pdf`;
+    const safeDate = now.toLocaleDateString('en-CA'); // YYYY-MM-DD
+    const safeTime = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(/:/g, '');
+    const prefix = customer ? customer.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30) + '_' : 'Case_Report_';
+    const filename = `${prefix}${safeDate}_${safeTime}.pdf`;
     pdf.save(filename);
-    showToast(`PDF saved: ${filename} ✓`, 'success', 3500);
+    showToast(`PDF saved: ${filename} Ã¢Å“â€œ`, 'success', 3500);
 
   } catch (err) {
     console.error('PDF generation error:', err);
-    showToast('Error generating PDF — check console', 'error');
+    showToast('Error generating PDF Ã¢â‚¬â€ check console', 'error');
   } finally {
     overlay.remove();
   }
 });
 
-/* ═══════════════════════════════════════════════════
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
    HELPERS
-═══════════════════════════════════════════════════ */
+Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     const s    = document.createElement('script');
@@ -509,9 +546,82 @@ function getImageDimensions(dataUrl) {
   });
 }
 
-/* ═══════════════════════════════════════════════════
-   PANEL DIVIDER — drag to resize
-═══════════════════════════════════════════════════ */
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+   LIGHTBOX Ã¢â‚¬â€ click image to zoom
+Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
+let lightboxEl  = null;
+let currentLbIdx = -1;
+
+function openLightbox(idx) {
+  currentLbIdx = idx;
+  renderLightbox();
+}
+
+function renderLightbox() {
+  closeLightbox(false); // remove previous if any
+  const { dataUrl, caption, name } = images[currentLbIdx];
+
+  const lb = document.createElement('div');
+  lb.className = 'lightbox';
+  lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
+
+  // Close button
+  const closeBtn       = document.createElement('button');
+  closeBtn.className   = 'lightbox-close';
+  closeBtn.innerHTML   = 'Ã¢Å“â€¢';
+  closeBtn.title       = 'Close (Esc)';
+  closeBtn.addEventListener('click', closeLightbox);
+
+  // Counter
+  const counter       = document.createElement('div');
+  counter.className   = 'lightbox-counter';
+  counter.textContent = `${currentLbIdx + 1} / ${images.length}`;
+
+  // Image wrapper
+  const wrap    = document.createElement('div');
+  wrap.className = 'lightbox-img-wrap';
+
+  const img  = document.createElement('img');
+  img.src    = dataUrl;
+  img.alt    = name || 'Screenshot';
+  wrap.appendChild(img);
+
+  // Caption below image
+  const capText = caption || name || '';
+  if (capText) {
+    const cap       = document.createElement('div');
+    cap.className   = 'lightbox-caption';
+    cap.textContent = capText;
+    wrap.appendChild(cap);
+  }
+
+  lb.appendChild(counter);
+  lb.appendChild(closeBtn);
+  lb.appendChild(wrap);
+  document.body.appendChild(lb);
+  lightboxEl = lb;
+}
+
+function closeLightbox(animate = true) {
+  if (!lightboxEl) return;
+  if (animate) {
+    lightboxEl.style.animation = 'lbFadeIn 0.15s ease reverse';
+    setTimeout(() => { lightboxEl?.remove(); lightboxEl = null; }, 140);
+  } else {
+    lightboxEl.remove();
+    lightboxEl = null;
+  }
+}
+
+// Keyboard: Escape closes, arrows navigate
+document.addEventListener('keydown', e => {
+  if (!lightboxEl) return;
+  if (e.key === 'Escape')      closeLightbox();
+  if (e.key === 'ArrowRight' && currentLbIdx < images.length - 1) { currentLbIdx++; renderLightbox(); }
+  if (e.key === 'ArrowLeft'  && currentLbIdx > 0)                  { currentLbIdx--; renderLightbox(); }
+});
+
+
 let isResizing = false, startX = 0, startWidth = 0;
 
 panelDivider.addEventListener('mousedown', e => {
@@ -535,7 +645,8 @@ document.addEventListener('mouseup', () => {
   document.body.style.userSelect = '';
 });
 
-/* ═══════════════════════════════════════════════════
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
    INIT
-═══════════════════════════════════════════════════ */
+Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 updateCanvasCount();
+
