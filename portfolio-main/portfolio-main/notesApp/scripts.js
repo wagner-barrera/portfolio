@@ -32,7 +32,7 @@ const panelRight      = document.getElementById('panelRight');
 /* ═══════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════ */
-let images = [];
+let images       = [];
 let imgIdCounter = 0;
 
 /* ═══════════════════════════════════════════════════
@@ -40,7 +40,7 @@ let imgIdCounter = 0;
 ═══════════════════════════════════════════════════ */
 function showToast(msg, type = 'info', duration = 2500) {
   toast.textContent = msg;
-  toast.className = `toast show ${type}`;
+  toast.className   = `toast show ${type}`;
   clearTimeout(toast._timer);
   toast._timer = setTimeout(() => toast.classList.remove('show'), duration);
 }
@@ -54,16 +54,17 @@ function buildNotePlain() {
 }
 
 function buildNoteHTML() {
-  const c = (nameText.value.trim()       || '').replace(/\n/g, '<br>');
-  const i = (issueText.value.trim()      || '').replace(/\n/g, '<br>');
-  const a = (actionText.value.trim()     || '').replace(/\n/g, '<br>');
-  const r = (resolutionText.value.trim() || '').replace(/\n/g, '<br>');
-  return (
-    `${c}<br><br>` +
-    `<strong>Issue:</strong><br>${i}<br><br>` +
-    `<strong>Action:</strong><br>${a}<br><br>` +
-    `<strong>Resolution:</strong><br>${r}`
-  );
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  const c = esc(nameText.value.trim());
+  const i = esc(issueText.value.trim());
+  const a = esc(actionText.value.trim());
+  const r = esc(resolutionText.value.trim());
+  return `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;">` +
+    `<p>${c}</p>` +
+    `<p><strong>Issue:</strong><br>${i}</p>` +
+    `<p><strong>Action:</strong><br>${a}</p>` +
+    `<p><strong>Resolution:</strong><br>${r}</p>` +
+    `</div>`;
 }
 
 function updatePreview() {
@@ -77,30 +78,43 @@ function updateCanvasCount() {
 }
 
 /* ═══════════════════════════════════════════════════
-   LEFT PANEL — COPY (with bold labels via HTML clipboard)
+   LEFT PANEL — COPY (HTML clipboard for bold labels)
 ═══════════════════════════════════════════════════ */
 copyButton.addEventListener('click', async () => {
-  const plainText = buildNotePlain();
-  const htmlText  = buildNoteHTML();
+  const plain = buildNotePlain();
+  const html  = buildNoteHTML();
 
-  try {
-    // Write both HTML (bold) and plain text to clipboard
-    await navigator.clipboard.write([
-      new ClipboardItem({
-        'text/html':  new Blob([htmlText],  { type: 'text/html' }),
-        'text/plain': new Blob([plainText], { type: 'text/plain' }),
-      })
-    ]);
-  } catch {
-    // Fallback — plain text only (some browsers restrict ClipboardItem)
-    await navigator.clipboard.writeText(plainText).catch(() => {});
+  let copiedRich = false;
+
+  // Attempt rich-text copy (bold labels in Word, Outlook, Slack, Gmail, etc.)
+  if (window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html':  new Blob([html],  { type: 'text/html' }),
+          'text/plain': new Blob([plain], { type: 'text/plain' }),
+        })
+      ]);
+      copiedRich = true;
+    } catch (e) {
+      // ClipboardItem blocked — fall through to plain text
+    }
+  }
+
+  if (!copiedRich) {
+    try {
+      await navigator.clipboard.writeText(plain);
+    } catch (e) {
+      showToast('Could not access clipboard', 'error');
+      return;
+    }
   }
 
   copyButton.innerHTML = '<span class="btn-icon">✅</span><span class="btn-label">Copied!</span>';
   copyButton.classList.add('copied');
   statusBadge.textContent = 'Copied!';
   statusBadge.classList.add('copying');
-  showToast('Note copied to clipboard (bold labels) ✓', 'success');
+  showToast(copiedRich ? 'Copied with bold labels ✓' : 'Copied (plain text) ✓', 'success');
 
   setTimeout(() => {
     copyButton.innerHTML = '<span class="btn-icon btn-copy-icon">📋</span><span class="btn-label">Copy</span>';
@@ -124,8 +138,8 @@ updatePreview();
    RIGHT PANEL — IMAGE CANVAS
 ═══════════════════════════════════════════════════ */
 function showCanvas() {
-  canvasDropzone.style.display = 'none';
-  canvasScroll.style.display   = 'flex';
+  canvasDropzone.style.display     = 'none';
+  canvasScroll.style.display       = 'flex';
   canvasScroll.style.flexDirection = 'column';
 }
 function maybeShowDropzone() {
@@ -140,28 +154,28 @@ function addImage(dataUrl, name = '') {
   const ts = new Date().toLocaleTimeString();
   images.push({ id, dataUrl, name, timestamp: ts });
 
-  const card = document.createElement('div');
-  card.className   = 'image-card';
-  card.dataset.id  = id;
+  const card      = document.createElement('div');
+  card.className  = 'image-card';
+  card.dataset.id = id;
 
-  const img    = document.createElement('img');
-  img.src      = dataUrl;
-  img.alt      = name || `Screenshot ${id}`;
-  img.loading  = 'lazy';
+  const img   = document.createElement('img');
+  img.src     = dataUrl;
+  img.alt     = name || `Screenshot ${id}`;
+  img.loading = 'lazy';
 
-  const actions   = document.createElement('div');
+  const actions     = document.createElement('div');
   actions.className = 'image-card-actions';
 
-  const deleteBtn = document.createElement('button');
+  const deleteBtn       = document.createElement('button');
   deleteBtn.className   = 'img-action-btn';
   deleteBtn.title       = 'Remove image';
   deleteBtn.textContent = '✕';
   deleteBtn.addEventListener('click', () => removeImage(id, card));
   actions.appendChild(deleteBtn);
 
-  const label = document.createElement('div');
-  label.className = 'image-label';
-  label.innerHTML = `<span class="image-number">#${images.length}</span><span>${name || 'Screenshot'} · ${ts}</span>`;
+  const label       = document.createElement('div');
+  label.className   = 'image-label';
+  label.innerHTML   = `<span class="image-number">#${images.length}</span><span>${name || 'Screenshot'} · ${ts}</span>`;
 
   card.appendChild(img);
   card.appendChild(actions);
@@ -191,7 +205,7 @@ function processFiles(files) {
   const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
   if (imageFiles.length === 0) { showToast('No image files found', 'error'); return; }
   imageFiles.forEach(file => {
-    const reader = new FileReader();
+    const reader  = new FileReader();
     reader.onload = e => addImage(e.target.result, file.name);
     reader.readAsDataURL(file);
   });
@@ -206,14 +220,19 @@ fileInputExtra.addEventListener('change', e => { processFiles(e.target.files); e
 /* — Drag & Drop — */
 [canvasDropzone, panelRight].forEach(el => {
   el.addEventListener('dragover',  e => { e.preventDefault(); canvasDropzone.classList.add('drag-over'); });
-  el.addEventListener('dragleave', e => { if (!panelRight.contains(e.relatedTarget)) canvasDropzone.classList.remove('drag-over'); });
-  el.addEventListener('drop',      e => { e.preventDefault(); canvasDropzone.classList.remove('drag-over'); processFiles(e.dataTransfer.files); });
+  el.addEventListener('dragleave', e => {
+    if (!panelRight.contains(e.relatedTarget)) canvasDropzone.classList.remove('drag-over');
+  });
+  el.addEventListener('drop', e => {
+    e.preventDefault(); canvasDropzone.classList.remove('drag-over');
+    processFiles(e.dataTransfer.files);
+  });
 });
 
 /* — Paste (Ctrl+V) — */
 document.addEventListener('paste', e => {
   const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-  let found = false;
+  let found   = false;
   for (const item of items) {
     if (item.type.startsWith('image/')) {
       found = true;
@@ -238,7 +257,8 @@ clearCanvasBtn.addEventListener('click', () => {
 });
 
 /* ═══════════════════════════════════════════════════
-   PDF DOWNLOAD — Professional cover + centered images + watermark
+   PDF GENERATION — Professional cover + centered images + watermark
+   Uses jsPDF 2.5.1 (loaded dynamically from CDN)
 ═══════════════════════════════════════════════════ */
 downloadPdfBtn.addEventListener('click', async () => {
   if (images.length === 0) return;
@@ -254,129 +274,141 @@ downloadPdfBtn.addEventListener('click', async () => {
     }
 
     const { jsPDF } = window.jspdf;
-    const pdf    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageW  = pdf.internal.pageSize.getWidth();   // 210
-    const pageH  = pdf.internal.pageSize.getHeight();  // 297
-    const margin = 20;
-    const now    = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
-    const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
-
-    // ── COVER PAGE ────────────────────────────────────────────────
-    // Header band
-    pdf.setFillColor(15, 25, 50);
-    pdf.rect(0, 0, pageW, 52, 'F');
-
-    // Accent stripe
-    pdf.setFillColor(31, 111, 235);
-    pdf.rect(0, 52, pageW, 3, 'F');
-
-    // "TRIMBLE" label top-right
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(9);
-    pdf.setTextColor(88, 166, 255);
-    pdf.text('TRIMBLE', pageW - margin, 14, { align: 'right' });
-
-    // Title
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(26);
-    pdf.setTextColor(230, 237, 243);
-    pdf.text('CASE REPORT', margin, 32);
-
-    // Subtitle
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
-    pdf.setTextColor(139, 148, 158);
-    pdf.text('Technical Support Documentation', margin, 43);
-
-    // Date / time badge area
-    pdf.setFontSize(9);
-    pdf.setTextColor(139, 148, 158);
-    pdf.text(`${dateStr}  ·  ${timeStr}`, margin, 63);
-
-    // Divider line
-    pdf.setDrawColor(36, 41, 50);
-    pdf.setLineWidth(0.4);
-    pdf.line(margin, 70, pageW - margin, 70);
-
-    // ── Bitácora section ──────────────────────────────────────────
-    let y = 80;
-
-    function sectionLabel(label, color) {
-      pdf.setFillColor(...color);
-      pdf.roundedRect(margin, y - 4, 3, 14, 1, 1, 'F');
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.setTextColor(...color);
-      pdf.text(label.toUpperCase(), margin + 7, y + 5);
-      y += 12;
-    }
-
-    function sectionBody(text) {
-      if (!text.trim()) {
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(10);
-        pdf.setTextColor(72, 79, 88);
-        pdf.text('—', margin + 7, y);
-        y += 8;
-      } else {
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(10.5);
-        pdf.setTextColor(60, 70, 85);
-        const lines = pdf.splitTextToSize(text.trim(), pageW - margin * 2 - 7);
-        pdf.text(lines, margin + 7, y);
-        y += lines.length * 5.5 + 6;
-      }
-    }
+    const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = pdf.internal.pageSize.getWidth();   // 210mm
+    const pageH = pdf.internal.pageSize.getHeight();  // 297mm
+    const mg    = 20; // margin
+    const now   = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
     const customer   = nameText.value.trim();
     const issue      = issueText.value.trim();
     const action     = actionText.value.trim();
     const resolution = resolutionText.value.trim();
 
-    // Customer block (no colored label, just grey)
+    /* ── COVER PAGE ─────────────────────────────────────────── */
+
+    // Dark navy header band (top 50mm)
+    pdf.setFillColor(15, 25, 50);
+    pdf.rect(0, 0, pageW, 50, 'F');
+
+    // Blue accent stripe below header
+    pdf.setFillColor(31, 111, 235);
+    pdf.rect(0, 50, pageW, 3, 'F');
+
+    // "TRIMBLE" label — top right (white on dark)
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(8);
+    pdf.setTextColor(88, 166, 255);
+    pdf.text('TRIMBLE', pageW - mg, 12, { align: 'right' });
+
+    // Vertical separator left accent
+    pdf.setFillColor(31, 111, 235);
+    pdf.rect(mg, 18, 1.2, 22, 'F');
+
+    // Title "CASE REPORT" — large white
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(24);
+    pdf.setTextColor(230, 237, 243);
+    pdf.text('CASE REPORT', mg + 5, 30);
+
+    // Subtitle
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(10);
+    pdf.setTextColor(139, 148, 158);
+    pdf.text('Technical Support Documentation  ·  Trimble Inc.', mg + 5, 40);
+
+    // Date/time line below the stripe
+    pdf.setFontSize(8.5);
+    pdf.setTextColor(100, 110, 130);
+    pdf.text(`${dateStr}  ·  ${timeStr}`, mg, 62);
+
+    // Light separator line
+    pdf.setDrawColor(220, 228, 240);
+    pdf.setLineWidth(0.3);
+    pdf.line(mg, 67, pageW - mg, 67);
+
+    /* ── Bitácora content ───────────────────────────────────── */
+    let y = 77;
+
+    // Customer name (if provided) — bold, larger
     if (customer) {
       pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(11);
-      pdf.setTextColor(30, 40, 60);
-      const cLines = pdf.splitTextToSize(customer, pageW - margin * 2);
-      pdf.text(cLines, margin, y);
-      y += cLines.length * 6 + 8;
-      pdf.setDrawColor(220, 230, 240);
-      pdf.line(margin, y, pageW - margin, y);
+      pdf.setFontSize(13);
+      pdf.setTextColor(20, 30, 55);
+      const cLines = pdf.splitTextToSize(customer, pageW - mg * 2);
+      pdf.text(cLines, mg, y);
+      y += cLines.length * 6.5 + 4;
+
+      // Customer underline
+      pdf.setDrawColor(200, 215, 235);
+      pdf.line(mg, y, pageW - mg, y);
       y += 10;
     }
 
-    sectionLabel('Issue', [220, 60, 60]);
-    sectionBody(issue);
+    // Helper: colored label pill
+    function drawSection(label, r, g, b, bodyText) {
+      if (y > pageH - 50) return; // safety check
 
-    sectionLabel('Action', [210, 150, 30]);
-    sectionBody(action);
+      // Left colored bar
+      pdf.setFillColor(r, g, b);
+      pdf.rect(mg, y, 2.5, 11, 'F');
 
-    sectionLabel('Resolution', [35, 160, 80]);
-    sectionBody(resolution);
+      // Label text
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(9);
+      pdf.setTextColor(r, g, b);
+      pdf.text(label, mg + 6, y + 7.5);
 
-    // ── Footer on cover ───────────────────────────────────────────
-    pdf.setFillColor(240, 244, 250);
-    pdf.rect(0, pageH - 28, pageW, 28, 'F');
-    pdf.setDrawColor(210, 220, 235);
-    pdf.line(0, pageH - 28, pageW, pageH - 28);
+      y += 14;
 
+      // Body text
+      if (!bodyText.trim()) {
+        pdf.setFont('helvetica', 'italic');
+        pdf.setFontSize(10);
+        pdf.setTextColor(160, 170, 185);
+        pdf.text('—', mg + 6, y);
+        y += 8;
+      } else {
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10.5);
+        pdf.setTextColor(45, 55, 75);
+        const lines = pdf.splitTextToSize(bodyText, pageW - mg * 2 - 6);
+        pdf.text(lines, mg + 6, y);
+        y += lines.length * 5.8 + 7;
+      }
+    }
+
+    drawSection('ISSUE',      210, 60,  60,  issue);
+    drawSection('ACTION',     200, 140, 30,  action);
+    drawSection('RESOLUTION', 35,  155, 75,  resolution);
+
+    /* ── Cover footer ───────────────────────────────────────── */
+    // Light footer band
+    pdf.setFillColor(240, 244, 252);
+    pdf.rect(0, pageH - 26, pageW, 26, 'F');
+    pdf.setDrawColor(210, 220, 240);
+    pdf.setLineWidth(0.3);
+    pdf.line(0, pageH - 26, pageW, pageH - 26);
+
+    // Left: name + role
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(10);
-    pdf.setTextColor(30, 60, 120);
-    pdf.text('Wagner A. Barrera', margin, pageH - 16);
+    pdf.setTextColor(25, 55, 120);
+    pdf.text('Wagner A. Barrera', mg, pageH - 15);
 
     pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8.5);
-    pdf.setTextColor(100, 110, 130);
-    pdf.text('Support Specialist  ·  Trimble Inc.', margin, pageH - 8);
-
     pdf.setFontSize(8);
-    pdf.setTextColor(150, 160, 175);
-    pdf.text(`Page 1 of ${images.length + 1}`, pageW - margin, pageH - 8, { align: 'right' });
+    pdf.setTextColor(90, 105, 130);
+    pdf.text('Support Specialist  ·  Trimble Inc.', mg, pageH - 8);
 
-    // ── IMAGE PAGES ───────────────────────────────────────────────
+    // Right: page number
+    pdf.setFontSize(8);
+    pdf.setTextColor(150, 160, 180);
+    pdf.text(`Page 1 of ${images.length + 1}`, pageW - mg, pageH - 8, { align: 'right' });
+
+    /* ── IMAGE PAGES ─────────────────────────────────────────── */
     for (let i = 0; i < images.length; i++) {
       pdf.addPage();
 
@@ -384,55 +416,64 @@ downloadPdfBtn.addEventListener('click', async () => {
       const dims  = await getImageDimensions(dataUrl);
       const ratio = dims.width / dims.height;
 
-      // Usable area (leave room for header bar + footer)
-      const headerH  = 14;
-      const footerH  = 14;
-      const availW   = pageW - margin * 2;
-      const availH   = pageH - headerH - footerH - margin * 2;
+      const headerH = 13;
+      const footerH = 13;
+      const availW  = pageW - mg * 2;
+      const availH  = pageH - headerH - footerH - mg * 2;
 
-      // Fit image within available area preserving aspect ratio
+      // Fit preserving aspect ratio
       let imgW = availW;
       let imgH = imgW / ratio;
       if (imgH > availH) { imgH = availH; imgW = imgH * ratio; }
 
-      // Center horizontally and vertically in available area
-      const x = margin + (availW - imgW) / 2;
-      const y0 = headerH + margin + (availH - imgH) / 2;
+      // Center on page
+      const x  = mg + (availW - imgW) / 2;
+      const y0 = headerH + mg + (availH - imgH) / 2;
 
-      // Subtle header bar
-      pdf.setFillColor(245, 248, 252);
+      /* ── Page header ── */
+      pdf.setFillColor(248, 250, 255);
       pdf.rect(0, 0, pageW, headerH, 'F');
-      pdf.setDrawColor(220, 230, 240);
+      pdf.setDrawColor(215, 225, 242);
+      pdf.setLineWidth(0.25);
       pdf.line(0, headerH, pageW, headerH);
+
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7.5);
-      pdf.setTextColor(130, 140, 155);
-      pdf.text('CASE REPORT  ·  Trimble', margin, 9);
-      pdf.text(`Screenshot ${i + 1} of ${images.length}`, pageW - margin, 9, { align: 'right' });
+      pdf.setTextColor(100, 115, 145);
+      pdf.text('CASE REPORT  ·  Trimble Inc.', mg, 9);
+      pdf.text(`Screenshot ${i + 1} of ${images.length}`, pageW - mg, 9, { align: 'right' });
 
-      // Draw image
+      /* ── Image ── */
       const fmt = dataUrl.startsWith('data:image/png') ? 'PNG' :
                   dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
       pdf.addImage(dataUrl, fmt, x, y0, imgW, imgH);
 
-      // Optional subtle image border
-      pdf.setDrawColor(210, 220, 235);
-      pdf.setLineWidth(0.3);
+      // Thin border around image
+      pdf.setDrawColor(200, 210, 230);
+      pdf.setLineWidth(0.25);
       pdf.rect(x, y0, imgW, imgH);
 
-      // ── WATERMARK ──────────────────────────────────────────────
-      addWatermark(pdf, pageW, pageH, 'Wagner A. Barrera');
+      /* ── Watermark — diagonal center ── */
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(22);
+      pdf.setTextColor(200, 208, 220);  // very light, subtle
+      pdf.text('Wagner A. Barrera', pageW / 2, pageH / 2, {
+        align: 'center',
+        angle: 45,
+      });
 
-      // ── Footer ─────────────────────────────────────────────────
-      pdf.setFillColor(245, 248, 252);
+      /* ── Page footer ── */
+      pdf.setFillColor(248, 250, 255);
       pdf.rect(0, pageH - footerH, pageW, footerH, 'F');
-      pdf.setDrawColor(220, 230, 240);
+      pdf.setDrawColor(215, 225, 242);
+      pdf.setLineWidth(0.25);
       pdf.line(0, pageH - footerH, pageW, pageH - footerH);
+
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(7.5);
-      pdf.setTextColor(130, 140, 155);
-      pdf.text('Wagner A. Barrera  ·  Trimble Inc.', margin, pageH - 4);
-      pdf.text(`Page ${i + 2} of ${images.length + 1}`, pageW - margin, pageH - 4, { align: 'right' });
+      pdf.setTextColor(100, 115, 145);
+      pdf.text('Wagner A. Barrera  ·  Trimble Inc.', mg, pageH - 4);
+      pdf.text(`Page ${i + 2} of ${images.length + 1}`, pageW - mg, pageH - 4, { align: 'right' });
     }
 
     const filename = `case-report-${now.toISOString().slice(0, 10)}.pdf`;
@@ -440,64 +481,45 @@ downloadPdfBtn.addEventListener('click', async () => {
     showToast(`PDF saved: ${filename} ✓`, 'success', 3500);
 
   } catch (err) {
-    console.error('PDF error:', err);
-    showToast('Error generating PDF', 'error');
+    console.error('PDF generation error:', err);
+    showToast('Error generating PDF — check console', 'error');
   } finally {
     overlay.remove();
   }
 });
-
-/**
- * Draw a subtle diagonal watermark text on the current page.
- */
-function addWatermark(pdf, pageW, pageH) {
-  pdf.saveGraphicsState();
-  // GState for transparency isn't universally available in jsPDF,
-  // so we use a very light gray color to simulate subtlety
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(28);
-  pdf.setTextColor(215, 220, 228);  // very light gray
-
-  // Center of page, rotated 45°
-  const cx = pageW / 2;
-  const cy = pageH / 2;
-  pdf.text('Wagner A. Barrera', cx, cy, {
-    align: 'center',
-    angle: 45,
-    renderingMode: 'fill',
-  });
-
-  pdf.restoreGraphicsState();
-}
 
 /* ═══════════════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════════════ */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = src; s.onload = resolve; s.onerror = reject;
+    const s    = document.createElement('script');
+    s.src      = src;
+    s.onload   = resolve;
+    s.onerror  = reject;
     document.head.appendChild(s);
   });
 }
 
 function getImageDimensions(dataUrl) {
   return new Promise(resolve => {
-    const img = new Image();
+    const img  = new Image();
     img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.src = dataUrl;
+    img.src    = dataUrl;
   });
 }
 
 /* ═══════════════════════════════════════════════════
-   PANEL DIVIDER — drag resize
+   PANEL DIVIDER — drag to resize
 ═══════════════════════════════════════════════════ */
 let isResizing = false, startX = 0, startWidth = 0;
 
 panelDivider.addEventListener('mousedown', e => {
-  isResizing = true; startX = e.clientX; startWidth = panelLeft.offsetWidth;
+  isResizing  = true;
+  startX      = e.clientX;
+  startWidth  = panelLeft.offsetWidth;
   panelDivider.classList.add('dragging');
-  document.body.style.cursor    = 'col-resize';
+  document.body.style.cursor     = 'col-resize';
   document.body.style.userSelect = 'none';
 });
 document.addEventListener('mousemove', e => {
@@ -509,7 +531,7 @@ document.addEventListener('mouseup', () => {
   if (!isResizing) return;
   isResizing = false;
   panelDivider.classList.remove('dragging');
-  document.body.style.cursor    = '';
+  document.body.style.cursor     = '';
   document.body.style.userSelect = '';
 });
 
