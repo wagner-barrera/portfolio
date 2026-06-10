@@ -30,8 +30,8 @@
   --btn-accent-bg:     linear-gradient(135deg, #238636 0%, #3fb950 100%);
   --btn-accent-hover:  linear-gradient(135deg, #2ea043 0%, #56d364 100%);
 
-  --canvas-bg:      #ffffff;
-  --canvas-shadow:  rgba(0,0,0,0.6);
+  --canvas-bg:      #0d1117;
+  --canvas-shadow:  rgba(0,0,0,0.8);
 
   --radius-sm:  6px;
   --radius-md:  10px;
@@ -350,7 +350,7 @@ body {
 ═══════════════════════════════════════════════════ */
 .panel-right {
   flex: 1;
-  background: rgba(22,27,34,0.4);
+  background: var(--bg-surface);
   min-width: 300px;
 }
 
@@ -418,6 +418,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 16px;
+  background: var(--bg-surface);
   scrollbar-width: thin;
   scrollbar-color: var(--border-normal) transparent;
 }
@@ -438,10 +439,11 @@ body {
 /* Individual image card */
 .image-card {
   position: relative;
-  background: var(--canvas-bg);
+  background: var(--bg-elevated);
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-subtle);
   transition: transform var(--transition), box-shadow var(--transition);
   animation: cardSlideIn 0.25s ease;
 }
@@ -454,15 +456,16 @@ body {
 .image-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--border-normal);
 }
 
 .image-card img {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 500px;
+  max-height: 520px;
   object-fit: contain;
-  background: #f0f0f0;
+  background: var(--bg-card);
 }
 
 .image-card-actions {
