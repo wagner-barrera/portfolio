@@ -6,7 +6,7 @@
 const copyButton      = document.getElementById('copyButton');
 const clearButton     = document.getElementById('clearButton');
 const statusBadge     = document.getElementById('statusBadge');
-const previewText     = document.getElementById('previewText');
+const previewText     = document.getElementById('previewText'); // may be null after UI update
 const toast           = document.getElementById('toast');
 
 const nameText        = document.getElementById('nameText');
@@ -68,7 +68,7 @@ function buildNoteHTML() {
 }
 
 function updatePreview() {
-  previewText.textContent = buildNotePlain();
+  if (previewText) previewText.textContent = buildNotePlain();
 }
 
 function updateCanvasCount() {
@@ -275,6 +275,38 @@ function getImageDimensions(dataUrl) {
 }
 
 /**
+ * Compresses a screenshot dataUrl:
+ *  - Resizes so the longest side is at most MAX_PX pixels
+ *  - Re-encodes as JPEG at QUALITY (0-1)
+ * Returns { dataUrl, width, height } of the compressed result.
+ */
+function compressImage(dataUrl, maxPx = 1000, quality = 0.75) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const { naturalWidth: w, naturalHeight: h } = img;
+      // Calculate scaled dimensions
+      const scale = Math.min(1, maxPx / Math.max(w, h));
+      const sw = Math.round(w * scale);
+      const sh = Math.round(h * scale);
+
+      const cv = document.createElement('canvas');
+      cv.width = sw; cv.height = sh;
+      const ctx = cv.getContext('2d');
+      // White background (avoids black fill when PNG alpha → JPEG)
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, sw, sh);
+      ctx.drawImage(img, 0, 0, sw, sh);
+
+      const compressed = cv.toDataURL('image/jpeg', quality);
+      resolve({ dataUrl: compressed, width: sw, height: sh });
+    };
+    img.onerror = () => resolve({ dataUrl, width: 0, height: 0 }); // fallback unchanged
+    img.src = dataUrl;
+  });
+}
+
+/**
  * Loads an image, auto-crops whitespace margins via canvas,
  * and returns { dataUrl, width, height } of the cropped result.
  * Returns null if the image fails to load.
@@ -361,7 +393,7 @@ downloadPdfBtn.addEventListener('click', async () => {
     }
 
     const { jsPDF } = window.jspdf;
-    const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
     const pageW = pdf.internal.pageSize.getWidth();   // 210mm
     const pageH = pdf.internal.pageSize.getHeight();  // 297mm
     const mg    = 20;
@@ -389,7 +421,7 @@ downloadPdfBtn.addEventListener('click', async () => {
 
     // Trimble logo — top-right, vertically centered in header
     if (logo) {
-      const logoH = 13; // desired height in mm
+      const logoH = 22; // desired height in mm
       const logoW = logoH * (logo.width / logo.height); // correct aspect ratio
       const logoX = pageW - mg - logoW;
       const logoY = (50 - logoH) / 2; // center in the 50mm header
@@ -428,43 +460,63 @@ downloadPdfBtn.addEventListener('click', async () => {
     pdf.setLineWidth(0.3);
     pdf.line(mg, 67, pageW - mg, 67);
 
-    /* ── Bitacora — auto-fit font to stay on page 1 ── */
-    const footerTop  = pageH - 30;  // don't write below here (footer zone)
-    const contentTop = 77;
-    const textWidth  = pageW - mg * 2 - 6;
+    /* ── Bitacora — multi-page if needed, fixed font ── */
+    const BODY_FS   = 10.5;
+    const LINE_H    = BODY_FS * 0.56;   // ~5.9mm per line
+    const textWidth = pageW - mg * 2 - 6;
 
-    // Estimate total height at a given body font size
-    function measureTotalHeight(fs) {
-      let h = 0;
-      if (customer) {
-        pdf.setFont('helvetica', 'bold').setFontSize(13);
-        h += pdf.splitTextToSize(customer, pageW - mg * 2).length * 6.5 + 14;
-      }
-      const mSec = (txt) => {
-        h += 14; // label row height
-        if (!txt.trim()) { h += 8; }
-        else {
-          pdf.setFont('helvetica', 'normal').setFontSize(fs);
-          h += pdf.splitTextToSize(txt, textWidth).length * (fs * 0.56) + 7;
-        }
-      };
-      mSec(issue); mSec(action); mSec(resolution);
-      return h;
+    // Footer boundaries per page type
+    const COVER_FOOTER = pageH - 30;  // cover page: taller footer (name/email)
+    const CONT_FOOTER  = pageH - 16;  // continuation pages: slim footer
+    const CONT_TOP     = 20;          // y where content starts on continuation pages
+
+    let y          = 77;              // start of content on cover page
+    let bitPage    = 1;              // current bitácora page index
+
+    // Helper: current safe bottom limit
+    function safeBottom() { return bitPage === 1 ? COVER_FOOTER : CONT_FOOTER; }
+
+    // Draw the slim footer on a continuation bitácora page, then add a new PDF page
+    function pageBreak() {
+      // Slim footer on current page
+      pdf.setFillColor(240, 244, 252);
+      pdf.rect(0, pageH - 13, pageW, 13, 'F');
+      pdf.setDrawColor(210, 220, 240);
+      pdf.setLineWidth(0.25);
+      pdf.line(0, pageH - 13, pageW, pageH - 13);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(100, 115, 145);
+      pdf.text('Wagner A. Barrera  \u00b7  Trimble Inc.', mg, pageH - 4);
+      // Page number filled in after we know total — leave placeholder
+      bitPage++;
+      pdf.addPage();
+      // Continuation page header
+      pdf.setFillColor(248, 250, 255);
+      pdf.rect(0, 0, pageW, 13, 'F');
+      pdf.setDrawColor(215, 225, 242);
+      pdf.setLineWidth(0.25);
+      pdf.line(0, 13, pageW, 13);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(100, 115, 145);
+      pdf.text('CASE REPORT  \u00b7  Trimble Inc.', mg, 9);
+      pdf.text('Continued', pageW - mg, 9, { align: 'right' });
+      y = CONT_TOP;
     }
 
-    // Reduce font until content fits
-    let bodyFontSize = 10.5;
-    while (bodyFontSize >= 6 && (contentTop + measureTotalHeight(bodyFontSize)) > footerTop) {
-      bodyFontSize = Math.round((bodyFontSize - 0.5) * 10) / 10;
+    // Ensure there is at least `needed` mm of vertical space, breaking page if not
+    function ensureSpace(needed) {
+      if (y + needed > safeBottom()) pageBreak();
     }
 
-    let y = contentTop;
-
+    // Customer name block
     if (customer) {
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(13);
       pdf.setTextColor(20, 30, 55);
       const cLines = pdf.splitTextToSize(customer, pageW - mg * 2);
+      ensureSpace(cLines.length * 6.5 + 14);
       pdf.text(cLines, mg, y);
       y += cLines.length * 6.5 + 4;
       pdf.setDrawColor(200, 215, 235);
@@ -472,8 +524,10 @@ downloadPdfBtn.addEventListener('click', async () => {
       y += 10;
     }
 
+    // Draw one section; text flows line-by-line with page breaks as needed
     function drawSection(label, r, g, b, bodyText) {
-      if (y > footerTop) return;
+      // Label bar — keep together with at least one line of body
+      ensureSpace(22);
       pdf.setFillColor(r, g, b);
       pdf.rect(mg, y, 2.5, 11, 'F');
       pdf.setFont('helvetica', 'bold');
@@ -481,25 +535,32 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.setTextColor(r, g, b);
       pdf.text(label, mg + 6, y + 7.5);
       y += 14;
+
       if (!bodyText.trim()) {
         pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(bodyFontSize);
+        pdf.setFontSize(BODY_FS);
         pdf.setTextColor(160, 170, 185);
         pdf.text('\u2014', mg + 6, y);
         y += 8;
       } else {
         pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(bodyFontSize);
+        pdf.setFontSize(BODY_FS);
         pdf.setTextColor(45, 55, 75);
         const lines = pdf.splitTextToSize(bodyText, textWidth);
-        pdf.text(lines, mg + 6, y);
-        y += lines.length * (bodyFontSize * 0.56) + 7;
+        for (const line of lines) {
+          ensureSpace(LINE_H);
+          pdf.text(line, mg + 6, y);
+          y += LINE_H;
+        }
+        y += 7; // section bottom padding
       }
     }
 
     drawSection('ISSUE',      210, 60,  60,  issue);
     drawSection('ACTION',     200, 140, 30,  action);
     drawSection('RESOLUTION', 35,  155, 75,  resolution);
+
+    const totalPages = bitPage + images.length;
 
     /* ── Cover footer ─────────────────────────────── */
     pdf.setFillColor(240, 244, 252);
@@ -524,7 +585,7 @@ downloadPdfBtn.addEventListener('click', async () => {
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(8);
     pdf.setTextColor(150, 160, 180);
-    pdf.text(`Page 1 of ${images.length + 1}`, pageW - mg, pageH - 4, { align: 'right' });
+    pdf.text(`Page 1 of ${totalPages}`, pageW - mg, pageH - 4, { align: 'right' });
 
     /* ── IMAGE PAGES ─────────────────────────────── */
     for (let i = 0; i < images.length; i++) {
@@ -559,10 +620,9 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.text('CASE REPORT  \u00b7  Trimble Inc.', mg, 9);
       pdf.text(`Screenshot ${i + 1} of ${images.length}`, pageW - mg, 9, { align: 'right' });
 
-      // Image
-      const fmt = dataUrl.startsWith('data:image/png') ? 'PNG' :
-                  dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
-      pdf.addImage(dataUrl, fmt, x, y0, imgW, imgH);
+      // Image — compress before embedding (resize + JPEG 82%)
+      const compressed = await compressImage(dataUrl);
+      pdf.addImage(compressed.dataUrl, 'JPEG', x, y0, imgW, imgH);
       pdf.setDrawColor(200, 210, 230);
       pdf.setLineWidth(0.25);
       pdf.rect(x, y0, imgW, imgH);
