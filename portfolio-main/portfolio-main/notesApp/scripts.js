@@ -78,7 +78,7 @@ function updateCanvasCount() {
 }
 
 /* ═══════════════════════════════════════════════════
-   LEFT PANEL — COPY (HTML clipboard for bold labels)
+   LEFT PANEL — COPY
 ═══════════════════════════════════════════════════ */
 copyButton.addEventListener('click', async () => {
   const plain = buildNotePlain();
@@ -151,7 +151,6 @@ function addImage(dataUrl, name = '') {
   card.className  = 'image-card';
   card.dataset.id = id;
 
-  // Editable caption (above the image)
   const caption           = document.createElement('div');
   caption.className       = 'image-caption';
   caption.contentEditable = 'true';
@@ -160,7 +159,6 @@ function addImage(dataUrl, name = '') {
   caption.addEventListener('input', () => { images[idx].caption = caption.innerText.trim(); });
   caption.addEventListener('paste', e => e.stopPropagation());
 
-  // Image
   const img   = document.createElement('img');
   img.src     = dataUrl;
   img.alt     = name || `Screenshot ${id}`;
@@ -168,7 +166,6 @@ function addImage(dataUrl, name = '') {
   img.title   = 'Double-click to zoom';
   img.addEventListener('dblclick', () => openLightbox(idx));
 
-  // Delete button
   const actions     = document.createElement('div');
   actions.className = 'image-card-actions';
   const deleteBtn       = document.createElement('button');
@@ -178,7 +175,6 @@ function addImage(dataUrl, name = '') {
   deleteBtn.addEventListener('click', () => removeImage(id, card));
   actions.appendChild(deleteBtn);
 
-  // Footer label
   const label     = document.createElement('div');
   label.className = 'image-label';
   label.innerHTML = `<span class="image-number">#${images.length}</span><span>${name || 'Screenshot'} \u00b7 ${ts}</span>`;
@@ -223,7 +219,6 @@ addMoreBtn.addEventListener('click',    () => fileInputExtra.click());
 fileInput.addEventListener('change',      e => { processFiles(e.target.files); e.target.value = ''; });
 fileInputExtra.addEventListener('change', e => { processFiles(e.target.files); e.target.value = ''; });
 
-/* Drag & Drop */
 [canvasDropzone, panelRight].forEach(el => {
   el.addEventListener('dragover',  e => { e.preventDefault(); canvasDropzone.classList.add('drag-over'); });
   el.addEventListener('dragleave', e => { if (!panelRight.contains(e.relatedTarget)) canvasDropzone.classList.remove('drag-over'); });
@@ -233,7 +228,6 @@ fileInputExtra.addEventListener('change', e => { processFiles(e.target.files); e
   });
 });
 
-/* Paste (Ctrl+V) */
 document.addEventListener('paste', e => {
   const items = (e.clipboardData || e.originalEvent.clipboardData).items;
   let found = false;
@@ -249,7 +243,6 @@ document.addEventListener('paste', e => {
   if (found) showToast('Screenshot added to canvas \uD83D\uDDBC\uFE0F', 'success');
 });
 
-/* Clear canvas */
 clearCanvasBtn.addEventListener('click', () => {
   if (images.length === 0) return;
   if (!confirm(`Remove all ${images.length} image${images.length !== 1 ? 's' : ''} from the canvas?`)) return;
@@ -261,20 +254,92 @@ clearCanvasBtn.addEventListener('click', () => {
 });
 
 /* ═══════════════════════════════════════════════════
-   HELPER: load image as dataURL via canvas
+   HELPERS
 ═══════════════════════════════════════════════════ */
-function loadImageAsDataURL(src) {
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s  = document.createElement('script');
+    s.src    = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+function getImageDimensions(dataUrl) {
+  return new Promise(resolve => {
+    const img  = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    img.src    = dataUrl;
+  });
+}
+
+/**
+ * Loads an image, auto-crops whitespace margins via canvas,
+ * and returns { dataUrl, width, height } of the cropped result.
+ * Returns null if the image fails to load.
+ */
+function loadLogoCropped(src) {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const cv = document.createElement('canvas');
-      cv.width  = img.naturalWidth;
-      cv.height = img.naturalHeight;
-      cv.getContext('2d').drawImage(img, 0, 0);
-      resolve(cv.toDataURL('image/png'));
+      try {
+        const fw = img.naturalWidth, fh = img.naturalHeight;
+
+        // Scan at 1/4 scale for speed (avoid scanning 8M pixels)
+        const scale = 0.25;
+        const sw = Math.floor(fw * scale);
+        const sh = Math.floor(fh * scale);
+
+        const cv  = document.createElement('canvas');
+        cv.width  = sw; cv.height = sh;
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0, sw, sh);
+        const data = ctx.getImageData(0, 0, sw, sh).data;
+
+        const isLight = (x, y) => {
+          const i = (y * sw + x) * 4;
+          return data[i] > 230 && data[i + 1] > 230 && data[i + 2] > 230;
+        };
+
+        let top = 0, bot = sh - 1, left = 0, right = sw - 1;
+
+        topScan: for (let y = 0; y < sh; y++) {
+          for (let x = 0; x < sw; x++) { if (!isLight(x, y)) { top = y; break topScan; } }
+        }
+        botScan: for (let y = sh - 1; y >= 0; y--) {
+          for (let x = 0; x < sw; x++) { if (!isLight(x, y)) { bot = y; break botScan; } }
+        }
+        leftScan: for (let x = 0; x < sw; x++) {
+          for (let y = 0; y < sh; y++) { if (!isLight(x, y)) { left = x; break leftScan; } }
+        }
+        rightScan: for (let x = sw - 1; x >= 0; x--) {
+          for (let y = 0; y < sh; y++) { if (!isLight(x, y)) { right = x; break rightScan; } }
+        }
+
+        // Map back to full-res coords with small padding
+        const pad = 30;
+        const sx = Math.max(0, Math.floor(left  / scale) - pad);
+        const sy = Math.max(0, Math.floor(top   / scale) - pad);
+        const ex = Math.min(fw, Math.floor(right / scale) + pad);
+        const ey = Math.min(fh, Math.floor(bot  / scale) + pad);
+
+        const cw = ex - sx, ch = ey - sy;
+        const cv2 = document.createElement('canvas');
+        cv2.width = cw; cv2.height = ch;
+        cv2.getContext('2d').drawImage(img, sx, sy, cw, ch, 0, 0, cw, ch);
+
+        resolve({ dataUrl: cv2.toDataURL('image/png'), width: cw, height: ch });
+      } catch (e) {
+        // Fallback: return full image uncropped
+        const cv = document.createElement('canvas');
+        cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+        cv.getContext('2d').drawImage(img, 0, 0);
+        resolve({ dataUrl: cv.toDataURL('image/png'), width: img.naturalWidth, height: img.naturalHeight });
+      }
     };
-    img.onerror = () => resolve(null); // logo optional — won't crash if missing
+    img.onerror = () => resolve(null);
     img.src = src;
   });
 }
@@ -297,8 +362,8 @@ downloadPdfBtn.addEventListener('click', async () => {
 
     const { jsPDF } = window.jspdf;
     const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
+    const pageW = pdf.internal.pageSize.getWidth();   // 210mm
+    const pageH = pdf.internal.pageSize.getHeight();  // 297mm
     const mg    = 20;
     const now   = new Date();
     const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -309,24 +374,28 @@ downloadPdfBtn.addEventListener('click', async () => {
     const action     = actionText.value.trim();
     const resolution = resolutionText.value.trim();
 
-    // Load Trimble logo (non-blocking — PDF works fine without it)
-    const trimbleLogo = await loadImageAsDataURL('trimble-logo.png');
+    // Load + auto-crop Trimble logo (non-blocking — PDF works without it)
+    const logo = await loadLogoCropped('trimble-logo.png');
 
     /* ── COVER PAGE ─────────────────────────────────── */
 
-    // Dark navy header band
+    // Dark navy header band (50mm)
     pdf.setFillColor(15, 25, 50);
     pdf.rect(0, 0, pageW, 50, 'F');
 
-    // Blue accent stripe
+    // Blue accent stripe below header
     pdf.setFillColor(31, 111, 235);
     pdf.rect(0, 50, pageW, 3, 'F');
 
-    // Trimble logo — top-right of header
-    if (trimbleLogo) {
-      pdf.addImage(trimbleLogo, 'PNG', pageW - mg - 26, 5, 26, 6.2);
+    // Trimble logo — top-right, vertically centered in header
+    if (logo) {
+      const logoH = 13; // desired height in mm
+      const logoW = logoH * (logo.width / logo.height); // correct aspect ratio
+      const logoX = pageW - mg - logoW;
+      const logoY = (50 - logoH) / 2; // center in the 50mm header
+      pdf.addImage(logo.dataUrl, 'PNG', logoX, logoY, logoW, logoH);
     } else {
-      // Fallback text if logo file not found
+      // Fallback text
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(8);
       pdf.setTextColor(88, 166, 255);
@@ -337,7 +406,7 @@ downloadPdfBtn.addEventListener('click', async () => {
     pdf.setFillColor(31, 111, 235);
     pdf.rect(mg, 18, 1.2, 22, 'F');
 
-    // Title
+    // Title "CASE REPORT"
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(24);
     pdf.setTextColor(230, 237, 243);
@@ -349,7 +418,7 @@ downloadPdfBtn.addEventListener('click', async () => {
     pdf.setTextColor(139, 148, 158);
     pdf.text('Technical Support Documentation  \u00b7  Trimble Inc.', mg + 5, 40);
 
-    // Date/time
+    // Date/time (below stripe)
     pdf.setFontSize(8.5);
     pdf.setTextColor(100, 110, 130);
     pdf.text(`${dateStr}  \u00b7  ${timeStr}`, mg, 62);
@@ -359,12 +428,12 @@ downloadPdfBtn.addEventListener('click', async () => {
     pdf.setLineWidth(0.3);
     pdf.line(mg, 67, pageW - mg, 67);
 
-    /* ── Bitacora content — auto-fit font to page ─── */
-    const footerTop  = pageH - 30;
+    /* ── Bitacora — auto-fit font to stay on page 1 ── */
+    const footerTop  = pageH - 30;  // don't write below here (footer zone)
     const contentTop = 77;
     const textWidth  = pageW - mg * 2 - 6;
 
-    // Measure total height for all sections at a given font size
+    // Estimate total height at a given body font size
     function measureTotalHeight(fs) {
       let h = 0;
       if (customer) {
@@ -372,7 +441,7 @@ downloadPdfBtn.addEventListener('click', async () => {
         h += pdf.splitTextToSize(customer, pageW - mg * 2).length * 6.5 + 14;
       }
       const mSec = (txt) => {
-        h += 14;
+        h += 14; // label row height
         if (!txt.trim()) { h += 8; }
         else {
           pdf.setFont('helvetica', 'normal').setFontSize(fs);
@@ -383,7 +452,7 @@ downloadPdfBtn.addEventListener('click', async () => {
       return h;
     }
 
-    // Reduce font size until content fits
+    // Reduce font until content fits
     let bodyFontSize = 10.5;
     while (bodyFontSize >= 6 && (contentTop + measureTotalHeight(bodyFontSize)) > footerTop) {
       bodyFontSize = Math.round((bodyFontSize - 0.5) * 10) / 10;
@@ -405,7 +474,6 @@ downloadPdfBtn.addEventListener('click', async () => {
 
     function drawSection(label, r, g, b, bodyText) {
       if (y > footerTop) return;
-
       pdf.setFillColor(r, g, b);
       pdf.rect(mg, y, 2.5, 11, 'F');
       pdf.setFont('helvetica', 'bold');
@@ -413,7 +481,6 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.setTextColor(r, g, b);
       pdf.text(label, mg + 6, y + 7.5);
       y += 14;
-
       if (!bodyText.trim()) {
         pdf.setFont('helvetica', 'italic');
         pdf.setFontSize(bodyFontSize);
@@ -480,7 +547,7 @@ downloadPdfBtn.addEventListener('click', async () => {
       const x  = mg + (availW - imgW) / 2;
       const y0 = headerH + mg + (availH - imgH) / 2;
 
-      /* Page header */
+      // Header
       pdf.setFillColor(248, 250, 255);
       pdf.rect(0, 0, pageW, headerH, 'F');
       pdf.setDrawColor(215, 225, 242);
@@ -492,7 +559,7 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.text('CASE REPORT  \u00b7  Trimble Inc.', mg, 9);
       pdf.text(`Screenshot ${i + 1} of ${images.length}`, pageW - mg, 9, { align: 'right' });
 
-      /* Image */
+      // Image
       const fmt = dataUrl.startsWith('data:image/png') ? 'PNG' :
                   dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
       pdf.addImage(dataUrl, fmt, x, y0, imgW, imgH);
@@ -500,7 +567,7 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.setLineWidth(0.25);
       pdf.rect(x, y0, imgW, imgH);
 
-      /* Caption */
+      // Caption
       if (caption) {
         const capY = y0 + imgH + 6;
         pdf.setFont('helvetica', 'italic');
@@ -510,7 +577,7 @@ downloadPdfBtn.addEventListener('click', async () => {
         pdf.text(capLines, pageW / 2, capY, { align: 'center' });
       }
 
-      /* Page footer */
+      // Footer
       pdf.setFillColor(248, 250, 255);
       pdf.rect(0, pageH - footerH, pageW, footerH, 'F');
       pdf.setDrawColor(215, 225, 242);
@@ -523,12 +590,15 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.text(`Page ${i + 2} of ${images.length + 1}`, pageW - mg, pageH - 4, { align: 'right' });
     }
 
-    /* ── Filename: first line of customer + date + time ── */
-    const firstLine  = customer ? customer.split('\n')[0].trim() : 'Case_Report';
-    const safeName   = firstLine.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_').substring(0, 40);
-    const safeDate   = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-    const safeTime   = `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-    const filename   = `${safeName}_${safeDate}_${safeTime}.pdf`;
+    /* ── PDF filename: first line of customer + date + time ── */
+    const firstLine = customer ? customer.split('\n')[0].trim() : 'Case_Report';
+    const safeName  = firstLine.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_').substring(0, 40);
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yyyy = now.getFullYear();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const filename = `${safeName}_${yyyy}-${mm}-${dd}_${hh}${min}.pdf`;
 
     pdf.save(filename);
     showToast(`PDF saved: ${filename} \u2713`, 'success', 3500);
@@ -542,28 +612,7 @@ downloadPdfBtn.addEventListener('click', async () => {
 });
 
 /* ═══════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════ */
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const s  = document.createElement('script');
-    s.src    = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
-function getImageDimensions(dataUrl) {
-  return new Promise(resolve => {
-    const img  = new Image();
-    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.src    = dataUrl;
-  });
-}
-
-/* ═══════════════════════════════════════════════════
-   LIGHTBOX — double-click image to zoom
+   LIGHTBOX — double-click to zoom
 ═══════════════════════════════════════════════════ */
 let lightboxEl   = null;
 let currentLbIdx = -1;
@@ -584,8 +633,8 @@ function renderLightbox() {
   closeBtn.title     = 'Close (Esc)';
   closeBtn.addEventListener('click', closeLightbox);
 
-  const counter     = document.createElement('div');
-  counter.className = 'lightbox-counter';
+  const counter       = document.createElement('div');
+  counter.className   = 'lightbox-counter';
   counter.textContent = `${currentLbIdx + 1} / ${images.length}`;
 
   const wrap     = document.createElement('div');
@@ -598,8 +647,8 @@ function renderLightbox() {
 
   const capText = caption || name || '';
   if (capText) {
-    const cap     = document.createElement('div');
-    cap.className = 'lightbox-caption';
+    const cap       = document.createElement('div');
+    cap.className   = 'lightbox-caption';
     cap.textContent = capText;
     wrap.appendChild(cap);
   }
@@ -636,7 +685,7 @@ let isResizing = false, startX = 0, startWidth = 0;
 panelDivider.addEventListener('mousedown', e => {
   isResizing = true; startX = e.clientX; startWidth = panelLeft.offsetWidth;
   panelDivider.classList.add('dragging');
-  document.body.style.cursor = 'col-resize';
+  document.body.style.cursor     = 'col-resize';
   document.body.style.userSelect = 'none';
 });
 document.addEventListener('mousemove', e => {
@@ -648,7 +697,7 @@ document.addEventListener('mouseup', () => {
   if (!isResizing) return;
   isResizing = false;
   panelDivider.classList.remove('dragging');
-  document.body.style.cursor = '';
+  document.body.style.cursor     = '';
   document.body.style.userSelect = '';
 });
 
