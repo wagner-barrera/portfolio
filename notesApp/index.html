@@ -124,6 +124,15 @@
               Visual Canvas
             </h2>
             <div class="panel-actions">
+              <!-- PDF quality selector -->
+              <div class="quality-picker" title="PDF image quality">
+                <span class="quality-label">Quality</span>
+                <div class="quality-options">
+                  <button class="quality-btn" data-quality="min" type="button">Min</button>
+                  <button class="quality-btn active" data-quality="mod" type="button">Med</button>
+                  <button class="quality-btn" data-quality="max" type="button">Max</button>
+                </div>
+              </div>
               <span class="canvas-count" id="canvasCount">0 images</span>
               <button class="btn btn-secondary btn-sm" id="clearCanvasBtn" type="button" title="Clear all images">
                 <span class="btn-icon">🗑️</span>
