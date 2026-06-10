@@ -77,6 +77,27 @@ function updateCanvasCount() {
   downloadPdfBtn.disabled = n === 0;
 }
 
+/* ── PDF Quality picker ── */
+const QUALITY_PRESETS = {
+  min: { maxPx: 1000, quality: 0.65 },
+  mod: { maxPx: 1400, quality: 0.78 },
+  max: { bypass: true },  // no resize, no recompression — original image
+};
+let currentQuality = localStorage.getItem('pdfQuality') || 'mod'; // restore last setting
+
+// Apply saved setting on load
+document.querySelectorAll('.quality-btn').forEach(btn => {
+  if (btn.dataset.quality === currentQuality) btn.classList.add('active');
+  else btn.classList.remove('active');
+
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentQuality = btn.dataset.quality;
+    localStorage.setItem('pdfQuality', currentQuality); // persist
+  });
+});
+
 /* ═══════════════════════════════════════════════════
    LEFT PANEL — COPY
 ═══════════════════════════════════════════════════ */
@@ -620,9 +641,20 @@ downloadPdfBtn.addEventListener('click', async () => {
       pdf.text('CASE REPORT  \u00b7  Trimble Inc.', mg, 9);
       pdf.text(`Screenshot ${i + 1} of ${images.length}`, pageW - mg, 9, { align: 'right' });
 
-      // Image — compress before embedding (resize + JPEG 82%)
-      const compressed = await compressImage(dataUrl);
-      pdf.addImage(compressed.dataUrl, 'JPEG', x, y0, imgW, imgH);
+      // Image — compress or bypass based on quality setting
+      let imgData, imgFmt;
+      if (currentQuality === 'max') {
+        // Full resolution, original format — no compression
+        imgData = dataUrl;
+        imgFmt  = dataUrl.startsWith('data:image/png') ? 'PNG'
+                : dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
+      } else {
+        const preset     = QUALITY_PRESETS[currentQuality];
+        const compressed = await compressImage(dataUrl, preset.maxPx, preset.quality);
+        imgData = compressed.dataUrl;
+        imgFmt  = 'JPEG';
+      }
+      pdf.addImage(imgData, imgFmt, x, y0, imgW, imgH);
       pdf.setDrawColor(200, 210, 230);
       pdf.setLineWidth(0.25);
       pdf.rect(x, y0, imgW, imgH);
