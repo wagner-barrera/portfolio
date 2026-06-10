@@ -1,53 +1,179 @@
 <!DOCTYPE html>
-<html>
-	<head lang="en">
-		<meta charset="utf-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0"
-		/>
-		<link href="styles.css" rel="stylesheet" />
-		<script src="scripts.js" defer></script>
-		<title>Notes App</title>
-	</head>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Notes App - Bitácora de casos con lienzo visual para screenshots" />
+    <title>Notes App — Case Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="styles.css" rel="stylesheet" />
+  </head>
 
-	<body>
-		<!-- <div class="back">＜</div> -->
-		<div class="form-container">
-			<form id="form">
-				<textarea
-					id="nameText"
-					placeholder="Customer information:"
-					class="input"
-				></textarea>
-				<textarea
-					id="issueText"
-					placeholder="Issue:"
-					class="input"
-				></textarea>
-				<textarea
-					id="actionText"
-					placeholder="Action:"
-					class="input"
-				></textarea>
-				<textarea
-					id="resolutionText"
-					placeholder="Resolution:"
-					class="input"
-				></textarea>
-				<div class="buttonsArea">
-					<button
-						type="button"
-						id="copyButton"
-						class="copyButton"
-					>
-						Copy
-					</button>
-					<button class="clearButton" type="submit">
-						Clear
-					</button>
-				</div>
-			</form>
-		</div>
-	</body>
+  <body>
+    <!-- Background mesh -->
+    <div class="bg-mesh"></div>
+
+    <div class="app-wrapper">
+      <!-- ═══════════════════ HEADER ═══════════════════ -->
+      <header class="app-header">
+        <div class="header-brand">
+          <span class="brand-icon">📋</span>
+          <span class="brand-name">Case Tracker</span>
+        </div>
+        <div class="header-actions">
+          <span class="status-badge" id="statusBadge">Ready</span>
+        </div>
+      </header>
+
+      <!-- ═══════════════════ MAIN LAYOUT ═══════════════════ -->
+      <main class="main-layout">
+
+        <!-- ═══ LEFT PANEL — BITÁCORA ═══ -->
+        <section class="panel panel-left" id="panelLeft">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span class="panel-icon">✍️</span>
+              Bitácora
+            </h2>
+            <div class="panel-actions">
+              <button class="btn btn-secondary btn-sm" id="clearButton" type="button" title="Clear all fields">
+                <span class="btn-icon">🗑️</span>
+                Clear
+              </button>
+              <button class="btn btn-primary" id="copyButton" type="button" title="Copy formatted note to clipboard">
+                <span class="btn-icon btn-copy-icon">📋</span>
+                <span class="btn-label">Copy</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="fields-container">
+
+            <!-- Customer -->
+            <div class="field-group">
+              <label class="field-label" for="nameText">
+                <span class="label-dot dot-blue"></span>
+                Customer Information
+              </label>
+              <textarea
+                id="nameText"
+                class="field-input"
+                placeholder="Name, account, contact details..."
+                rows="3"
+              ></textarea>
+            </div>
+
+            <!-- Issue -->
+            <div class="field-group">
+              <label class="field-label" for="issueText">
+                <span class="label-dot dot-red"></span>
+                Issue
+              </label>
+              <textarea
+                id="issueText"
+                class="field-input"
+                placeholder="Describe the reported issue..."
+                rows="4"
+              ></textarea>
+            </div>
+
+            <!-- Action -->
+            <div class="field-group">
+              <label class="field-label" for="actionText">
+                <span class="label-dot dot-yellow"></span>
+                Action
+              </label>
+              <textarea
+                id="actionText"
+                class="field-input"
+                placeholder="Steps taken to address the issue..."
+                rows="4"
+              ></textarea>
+            </div>
+
+            <!-- Resolution -->
+            <div class="field-group">
+              <label class="field-label" for="resolutionText">
+                <span class="label-dot dot-green"></span>
+                Resolution
+              </label>
+              <textarea
+                id="resolutionText"
+                class="field-input"
+                placeholder="Final resolution or outcome..."
+                rows="4"
+              ></textarea>
+            </div>
+
+          </div>
+
+          <!-- Copy preview -->
+          <div class="copy-preview" id="copyPreview">
+            <div class="preview-label">Preview</div>
+            <pre class="preview-text" id="previewText"></pre>
+          </div>
+        </section>
+
+        <!-- ═══ DIVIDER ═══ -->
+        <div class="panel-divider" id="panelDivider">
+          <div class="divider-handle"></div>
+        </div>
+
+        <!-- ═══ RIGHT PANEL — CANVAS ═══ -->
+        <section class="panel panel-right" id="panelRight">
+          <div class="panel-header">
+            <h2 class="panel-title">
+              <span class="panel-icon">🖼️</span>
+              Visual Canvas
+            </h2>
+            <div class="panel-actions">
+              <span class="canvas-count" id="canvasCount">0 images</span>
+              <button class="btn btn-secondary btn-sm" id="clearCanvasBtn" type="button" title="Clear all images">
+                <span class="btn-icon">🗑️</span>
+                Clear
+              </button>
+              <button class="btn btn-accent" id="downloadPdfBtn" type="button" title="Download all images as PDF" disabled>
+                <span class="btn-icon">⬇️</span>
+                <span class="btn-label">PDF</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Drop zone hint shown when canvas is empty -->
+          <div class="canvas-dropzone" id="canvasDropzone">
+            <div class="dropzone-inner">
+              <div class="dropzone-icon">🖼️</div>
+              <p class="dropzone-title">Paste screenshots here</p>
+              <p class="dropzone-subtitle">Ctrl+V to paste · Drag & drop · Click to select file</p>
+              <input type="file" id="fileInput" accept="image/*" multiple hidden />
+              <button class="btn btn-ghost" id="selectFileBtn" type="button">Browse files</button>
+            </div>
+          </div>
+
+          <!-- Canvas scroll area -->
+          <div class="canvas-scroll" id="canvasScroll" style="display:none;">
+            <div class="canvas-images" id="canvasImages">
+              <!-- Images inserted here dynamically -->
+            </div>
+
+            <!-- Floating add button -->
+            <div class="canvas-add-bar">
+              <input type="file" id="fileInputExtra" accept="image/*" multiple hidden />
+              <button class="btn btn-ghost btn-sm" id="addMoreBtn" type="button">
+                <span>+</span> Add more images
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="scripts.js" defer></script>
+  </body>
 </html>
