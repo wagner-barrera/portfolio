@@ -6,7 +6,7 @@
 const copyButton      = document.getElementById('copyButton');
 const clearButton     = document.getElementById('clearButton');
 const statusBadge     = document.getElementById('statusBadge');
-const previewText     = document.getElementById('previewText'); // may be null after UI update
+const previewText     = document.getElementById('previewText'); // may be null
 const toast           = document.getElementById('toast');
 
 const nameText        = document.getElementById('nameText');
@@ -20,6 +20,7 @@ const canvasScroll    = document.getElementById('canvasScroll');
 const canvasImages    = document.getElementById('canvasImages');
 const canvasCount     = document.getElementById('canvasCount');
 const downloadPdfBtn  = document.getElementById('downloadPdfBtn');
+const downloadDocxBtn = document.getElementById('downloadDocxBtn');
 const clearCanvasBtn  = document.getElementById('clearCanvasBtn');
 const fileInput       = document.getElementById('fileInput');
 const fileInputExtra  = document.getElementById('fileInputExtra');
@@ -73,15 +74,16 @@ function updatePreview() {
 
 function updateCanvasCount() {
   const n = images.length;
-  canvasCount.textContent = `${n} image${n !== 1 ? 's' : ''}`;
-  downloadPdfBtn.disabled = n === 0;
+  canvasCount.textContent  = `${n} image${n !== 1 ? 's' : ''}`;
+  downloadPdfBtn.disabled  = n === 0;
+  downloadDocxBtn.disabled = n === 0;
 }
 
 /* ── PDF Quality picker ── */
 const QUALITY_PRESETS = {
   min: { maxPx: 1000, quality: 0.65 },
   mod: { maxPx: 1400, quality: 0.78 },
-  max: { bypass: true },  // no resize, no recompression — original image
+  max: { bypass: true },
 };
 let currentQuality = localStorage.getItem('pdfQuality') || 'mod';
 
@@ -294,11 +296,6 @@ function getImageDimensions(dataUrl) {
   });
 }
 
-/**
- * Compresses a screenshot dataUrl:
- *  - Resizes so the longest side is at most MAX_PX pixels
- *  - Re-encodes as JPEG at QUALITY (0-1)
- */
 function compressImage(dataUrl, maxPx = 1000, quality = 0.75) {
   return new Promise(resolve => {
     const img = new Image();
@@ -320,8 +317,22 @@ function compressImage(dataUrl, maxPx = 1000, quality = 0.75) {
   });
 }
 
+/* Shared filename builder */
+function buildFilename(ext) {
+  const customer = nameText.value.trim();
+  const now = new Date();
+  const firstLine = customer ? customer.split('\n')[0].trim() : 'Screenshots';
+  const safeName  = firstLine.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_').substring(0, 40) || 'Screenshots';
+  const dd   = String(now.getDate()).padStart(2, '0');
+  const mm   = String(now.getMonth() + 1).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const hh   = String(now.getHours()).padStart(2, '0');
+  const mn   = String(now.getMinutes()).padStart(2, '0');
+  return `${safeName}_${yyyy}-${mm}-${dd}_${hh}${mn}.${ext}`;
+}
+
 /* ═══════════════════════════════════════════════════
-   PDF GENERATION
+   PDF GENERATION — PAGELESS (single tall page)
 ═══════════════════════════════════════════════════ */
 downloadPdfBtn.addEventListener('click', async () => {
   if (images.length === 0) return;
@@ -337,81 +348,174 @@ downloadPdfBtn.addEventListener('click', async () => {
     }
 
     const { jsPDF } = window.jspdf;
-    const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-    const pageW = pdf.internal.pageSize.getWidth();   // 210
-    const pageH = pdf.internal.pageSize.getHeight();  // 297
-    const mg    = 15;
-    const availW = pageW - mg * 2;
-    const now   = new Date();
-    const customer = nameText.value.trim();
 
-    /* ── One clean page per screenshot ── */
+    // ── Layout constants (mm) ──
+    const PAGE_W   = 210;
+    const MG       = 15;
+    const AVAIL_W  = PAGE_W - MG * 2;
+    const GAP      = 12;   // gap between images
+    const CAP_FS   = 16;
+    const CAP_LH   = CAP_FS * 0.45; // ~7.2 mm per text line
+
+    // Pre-load a temporary PDF to use splitTextToSize for measurement
+    const tmpPdf = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    // ── Measure total height needed ──
+    let totalH = MG;
+    const imageData = []; // cache dims for reuse
+
     for (let i = 0; i < images.length; i++) {
-      if (i > 0) pdf.addPage();
-
       const { dataUrl, caption } = images[i];
-
-      // Caption block — rendered ABOVE the image in large bold text
-      const CAP_FS     = 16;
-      const CAP_LINE_H = CAP_FS * 0.45; // ~7.2 mm per line
-      let capLines  = [];
-      let capBlockH = 0;
-
-      if (caption && caption.trim()) {
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(CAP_FS);
-        capLines  = pdf.splitTextToSize(caption.trim(), availW);
-        capBlockH = capLines.length * CAP_LINE_H + 8; // +8 mm gap below text
-      }
-
-      // Image — full resolution, original format, no compression
       const dims  = await getImageDimensions(dataUrl);
       const ratio = dims.width / dims.height;
 
-      const imgAreaH = pageH - mg - capBlockH - mg;
-      let imgW = availW;
-      let imgH = imgW / ratio;
-      if (imgH > imgAreaH) { imgH = imgAreaH; imgW = imgH * ratio; }
+      // Caption height
+      let capH = 0;
+      let capLines = [];
+      if (caption && caption.trim()) {
+        tmpPdf.setFont('helvetica', 'bold');
+        tmpPdf.setFontSize(CAP_FS);
+        capLines = tmpPdf.splitTextToSize(caption.trim(), AVAIL_W);
+        capH = capLines.length * CAP_LH + 6;
+      }
 
-      const imgX = mg + (availW - imgW) / 2;
-      const imgY = mg + capBlockH;
+      // Image height (fit to page width)
+      const imgW = AVAIL_W;
+      const imgH = imgW / ratio;
 
-      // Draw caption
+      imageData.push({ dataUrl, caption, dims, ratio, capLines, capH, imgW, imgH });
+      totalH += capH + imgH + (i < images.length - 1 ? GAP : 0);
+    }
+    totalH += MG;
+
+    // ── Create single tall page ──
+    const pdf = new jsPDF({ unit: 'mm', format: [PAGE_W, totalH], compress: true });
+    let y = MG;
+
+    for (let i = 0; i < imageData.length; i++) {
+      const { dataUrl, capLines, capH, imgW, imgH, ratio } = imageData[i];
+
+      // Caption above image
       if (capLines.length > 0) {
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(CAP_FS);
         pdf.setTextColor(15, 23, 42);
-        pdf.text(capLines, mg, mg + CAP_LINE_H);
+        pdf.text(capLines, MG, y + CAP_LH);
+        y += capH;
       }
 
-      // Draw image — original format, no compression
+      // Image — full resolution, original format
       const imgFmt = dataUrl.startsWith('data:image/png') ? 'PNG'
                    : dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
-      pdf.addImage(dataUrl, imgFmt, imgX, imgY, imgW, imgH);
-
-      // Subtle page counter — bottom-right only
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(8);
-      pdf.setTextColor(180, 185, 195);
-      pdf.text(`${i + 1} / ${images.length}`, pageW - mg, pageH - 5, { align: 'right' });
+      const imgX = MG + (AVAIL_W - imgW) / 2;
+      pdf.addImage(dataUrl, imgFmt, imgX, y, imgW, imgH);
+      y += imgH + (i < imageData.length - 1 ? GAP : 0);
     }
 
-    /* ── Filename: first line of Customer field + date + time ── */
-    const firstLine = customer ? customer.split('\n')[0].trim() : 'Screenshots';
-    const safeName  = firstLine.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_').substring(0, 40) || 'Screenshots';
-    const dd   = String(now.getDate()).padStart(2, '0');
-    const mm   = String(now.getMonth() + 1).padStart(2, '0');
-    const yyyy = now.getFullYear();
-    const hh   = String(now.getHours()).padStart(2, '0');
-    const mn   = String(now.getMinutes()).padStart(2, '0');
-    const filename = `${safeName}_${yyyy}-${mm}-${dd}_${hh}${mn}.pdf`;
-
-    pdf.save(filename);
-    showToast(`PDF saved: ${filename} \u2713`, 'success', 3500);
+    pdf.save(buildFilename('pdf'));
+    showToast(`PDF saved \u2713`, 'success', 3500);
 
   } catch (err) {
     console.error('PDF generation error:', err);
     showToast('Error generating PDF \u2014 check console', 'error');
+  } finally {
+    overlay.remove();
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   DOCX GENERATION
+═══════════════════════════════════════════════════ */
+downloadDocxBtn.addEventListener('click', async () => {
+  if (images.length === 0) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'pdf-overlay';
+  overlay.innerHTML = `<div class="pdf-spinner"><div class="spinner-ring"></div><p>Generating DOCX\u2026</p></div>`;
+  document.body.appendChild(overlay);
+
+  try {
+    if (!window.docx) {
+      await loadScript('https://unpkg.com/docx@8.2.4/build/index.js');
+    }
+
+    const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, SpacingType } = window.docx;
+
+    // Max usable width in Word: A4 minus 2.54cm margins each side ≈ 595 px at 72dpi
+    const MAX_IMG_W_PX = 595;
+
+    const children = [];
+
+    for (let i = 0; i < images.length; i++) {
+      const { dataUrl, caption } = images[i];
+
+      // Caption paragraph — bold, 18pt
+      if (caption && caption.trim()) {
+        children.push(new Paragraph({
+          children: [
+            new TextRun({
+              text: caption.trim(),
+              bold: true,
+              size: 36,        // half-points → 18pt
+              font: 'Arial',
+              color: '0F1726',
+            })
+          ],
+          spacing: { after: 160 }
+        }));
+      }
+
+      // Decode dataUrl → Uint8Array
+      const base64  = dataUrl.split(',')[1];
+      const binary  = atob(base64);
+      const bytes   = new Uint8Array(binary.length);
+      for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+
+      // Proportional sizing
+      const dims = await getImageDimensions(dataUrl);
+      let imgW = Math.min(dims.width, MAX_IMG_W_PX);
+      let imgH = Math.round(imgW * (dims.height / dims.width));
+
+      const imgType = dataUrl.startsWith('data:image/png') ? 'PNG'
+                    : dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
+
+      children.push(new Paragraph({
+        children: [
+          new ImageRun({
+            data: bytes.buffer,
+            transformation: { width: imgW, height: imgH },
+            type: imgType.toLowerCase(),
+          })
+        ],
+        spacing: { after: i < images.length - 1 ? 480 : 0 }
+      }));
+    }
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            margin: { top: 914400 * 0.5, bottom: 914400 * 0.5, left: 914400 * 0.5, right: 914400 * 0.5 }
+          }
+        },
+        children
+      }]
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+    const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url    = URL.createObjectURL(blob);
+    const a      = document.createElement('a');
+    a.href       = url;
+    a.download   = buildFilename('docx');
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast(`DOCX saved \u2713`, 'success', 3500);
+
+  } catch (err) {
+    console.error('DOCX generation error:', err);
+    showToast('Error generating DOCX \u2014 check console', 'error');
   } finally {
     overlay.remove();
   }
