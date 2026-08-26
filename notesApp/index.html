@@ -21,6 +21,7 @@
         <div class="header-brand">
           <span class="brand-icon">📋</span>
           <span class="brand-name">Case Tracker</span>
+          <span class="version-badge">v1.4.0</span>
         </div>
         <div class="header-actions">
           <span class="status-badge" id="statusBadge">Ready</span>
@@ -138,7 +139,11 @@
                 <span class="btn-icon">🗑️</span>
                 Clear
               </button>
-              <button class="btn btn-accent" id="downloadPdfBtn" type="button" title="Download all images as PDF" disabled>
+              <button class="btn btn-docx" id="downloadDocxBtn" type="button" title="Download as Word document (.docx)" disabled>
+                <span class="btn-icon">📄</span>
+                <span class="btn-label">DOCX</span>
+              </button>
+              <button class="btn btn-accent" id="downloadPdfBtn" type="button" title="Download as pageless PDF" disabled>
                 <span class="btn-icon">⬇️</span>
                 <span class="btn-label">PDF</span>
               </button>
@@ -150,7 +155,7 @@
             <div class="dropzone-inner">
               <div class="dropzone-icon">🖼️</div>
               <p class="dropzone-title">Paste screenshots here</p>
-              <p class="dropzone-subtitle">Ctrl+V to paste · Drag & drop · Click to select file</p>
+              <p class="dropzone-subtitle">Ctrl+V to paste · Drag &amp; drop · Click to select file</p>
               <input type="file" id="fileInput" accept="image/*" multiple hidden />
               <button class="btn btn-ghost" id="selectFileBtn" type="button">Browse files</button>
             </div>
