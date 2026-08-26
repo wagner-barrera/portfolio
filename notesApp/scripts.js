@@ -76,7 +76,7 @@ function updateCanvasCount() {
   const n = images.length;
   canvasCount.textContent  = `${n} image${n !== 1 ? 's' : ''}`;
   downloadPdfBtn.disabled  = n === 0;
-  downloadDocxBtn.disabled = n === 0;
+  if (downloadDocxBtn) downloadDocxBtn.disabled = n === 0;
 }
 
 /* ── PDF Quality picker ── */
@@ -426,7 +426,7 @@ downloadPdfBtn.addEventListener('click', async () => {
 /* ═══════════════════════════════════════════════════
    DOCX GENERATION
 ═══════════════════════════════════════════════════ */
-downloadDocxBtn.addEventListener('click', async () => {
+if (downloadDocxBtn) downloadDocxBtn.addEventListener('click', async () => {
   if (images.length === 0) return;
 
   const overlay = document.createElement('div');
