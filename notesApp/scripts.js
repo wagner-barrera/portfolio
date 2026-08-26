@@ -83,9 +83,8 @@ const QUALITY_PRESETS = {
   mod: { maxPx: 1400, quality: 0.78 },
   max: { bypass: true },  // no resize, no recompression — original image
 };
-let currentQuality = localStorage.getItem('pdfQuality') || 'mod'; // restore last setting
+let currentQuality = localStorage.getItem('pdfQuality') || 'mod';
 
-// Apply saved setting on load
 document.querySelectorAll('.quality-btn').forEach(btn => {
   if (btn.dataset.quality === currentQuality) btn.classList.add('active');
   else btn.classList.remove('active');
@@ -94,7 +93,7 @@ document.querySelectorAll('.quality-btn').forEach(btn => {
     document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentQuality = btn.dataset.quality;
-    localStorage.setItem('pdfQuality', currentQuality); // persist
+    localStorage.setItem('pdfQuality', currentQuality);
   });
 });
 
@@ -299,101 +298,25 @@ function getImageDimensions(dataUrl) {
  * Compresses a screenshot dataUrl:
  *  - Resizes so the longest side is at most MAX_PX pixels
  *  - Re-encodes as JPEG at QUALITY (0-1)
- * Returns { dataUrl, width, height } of the compressed result.
  */
 function compressImage(dataUrl, maxPx = 1000, quality = 0.75) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
       const { naturalWidth: w, naturalHeight: h } = img;
-      // Calculate scaled dimensions
       const scale = Math.min(1, maxPx / Math.max(w, h));
       const sw = Math.round(w * scale);
       const sh = Math.round(h * scale);
-
       const cv = document.createElement('canvas');
       cv.width = sw; cv.height = sh;
       const ctx = cv.getContext('2d');
-      // White background (avoids black fill when PNG alpha → JPEG)
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, sw, sh);
       ctx.drawImage(img, 0, 0, sw, sh);
-
-      const compressed = cv.toDataURL('image/jpeg', quality);
-      resolve({ dataUrl: compressed, width: sw, height: sh });
+      resolve({ dataUrl: cv.toDataURL('image/jpeg', quality), width: sw, height: sh });
     };
-    img.onerror = () => resolve({ dataUrl, width: 0, height: 0 }); // fallback unchanged
+    img.onerror = () => resolve({ dataUrl, width: 0, height: 0 });
     img.src = dataUrl;
-  });
-}
-
-/**
- * Loads an image, auto-crops whitespace margins via canvas,
- * and returns { dataUrl, width, height } of the cropped result.
- * Returns null if the image fails to load.
- */
-function loadLogoCropped(src) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const fw = img.naturalWidth, fh = img.naturalHeight;
-
-        // Scan at 1/4 scale for speed (avoid scanning 8M pixels)
-        const scale = 0.25;
-        const sw = Math.floor(fw * scale);
-        const sh = Math.floor(fh * scale);
-
-        const cv  = document.createElement('canvas');
-        cv.width  = sw; cv.height = sh;
-        const ctx = cv.getContext('2d');
-        ctx.drawImage(img, 0, 0, sw, sh);
-        const data = ctx.getImageData(0, 0, sw, sh).data;
-
-        const isLight = (x, y) => {
-          const i = (y * sw + x) * 4;
-          return data[i] > 230 && data[i + 1] > 230 && data[i + 2] > 230;
-        };
-
-        let top = 0, bot = sh - 1, left = 0, right = sw - 1;
-
-        topScan: for (let y = 0; y < sh; y++) {
-          for (let x = 0; x < sw; x++) { if (!isLight(x, y)) { top = y; break topScan; } }
-        }
-        botScan: for (let y = sh - 1; y >= 0; y--) {
-          for (let x = 0; x < sw; x++) { if (!isLight(x, y)) { bot = y; break botScan; } }
-        }
-        leftScan: for (let x = 0; x < sw; x++) {
-          for (let y = 0; y < sh; y++) { if (!isLight(x, y)) { left = x; break leftScan; } }
-        }
-        rightScan: for (let x = sw - 1; x >= 0; x--) {
-          for (let y = 0; y < sh; y++) { if (!isLight(x, y)) { right = x; break rightScan; } }
-        }
-
-        // Map back to full-res coords with small padding
-        const pad = 30;
-        const sx = Math.max(0, Math.floor(left  / scale) - pad);
-        const sy = Math.max(0, Math.floor(top   / scale) - pad);
-        const ex = Math.min(fw, Math.floor(right / scale) + pad);
-        const ey = Math.min(fh, Math.floor(bot  / scale) + pad);
-
-        const cw = ex - sx, ch = ey - sy;
-        const cv2 = document.createElement('canvas');
-        cv2.width = cw; cv2.height = ch;
-        cv2.getContext('2d').drawImage(img, sx, sy, cw, ch, 0, 0, cw, ch);
-
-        resolve({ dataUrl: cv2.toDataURL('image/png'), width: cw, height: ch });
-      } catch (e) {
-        // Fallback: return full image uncropped
-        const cv = document.createElement('canvas');
-        cv.width = img.naturalWidth; cv.height = img.naturalHeight;
-        cv.getContext('2d').drawImage(img, 0, 0);
-        resolve({ dataUrl: cv.toDataURL('image/png'), width: img.naturalWidth, height: img.naturalHeight });
-      }
-    };
-    img.onerror = () => resolve(null);
-    img.src = src;
   });
 }
 
@@ -415,282 +338,73 @@ downloadPdfBtn.addEventListener('click', async () => {
 
     const { jsPDF } = window.jspdf;
     const pdf   = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-    const pageW = pdf.internal.pageSize.getWidth();   // 210mm
-    const pageH = pdf.internal.pageSize.getHeight();  // 297mm
-    const mg    = 20;
+    const pageW = pdf.internal.pageSize.getWidth();   // 210
+    const pageH = pdf.internal.pageSize.getHeight();  // 297
+    const mg    = 15;
+    const availW = pageW - mg * 2;
     const now   = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const customer = nameText.value.trim();
 
-    const customer   = nameText.value.trim();
-    const issue      = issueText.value.trim();
-    const action     = actionText.value.trim();
-    const resolution = resolutionText.value.trim();
-
-    // Load + auto-crop Trimble logo (non-blocking — PDF works without it)
-    const logo = await loadLogoCropped('trimble-logo.png');
-
-    /* ── COVER PAGE ─────────────────────────────────── */
-
-    // Dark navy header band (50mm)
-    pdf.setFillColor(15, 25, 50);
-    pdf.rect(0, 0, pageW, 50, 'F');
-
-    // Blue accent stripe below header
-    pdf.setFillColor(31, 111, 235);
-    pdf.rect(0, 50, pageW, 3, 'F');
-
-    // Trimble logo — top-right, vertically centered in header
-    if (logo) {
-      const logoH = 22; // desired height in mm
-      const logoW = logoH * (logo.width / logo.height); // correct aspect ratio
-      const logoX = pageW - mg - logoW;
-      const logoY = (50 - logoH) / 2; // center in the 50mm header
-      pdf.addImage(logo.dataUrl, 'PNG', logoX, logoY, logoW, logoH);
-    } else {
-      // Fallback text
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(8);
-      pdf.setTextColor(88, 166, 255);
-      pdf.text('TRIMBLE', pageW - mg, 12, { align: 'right' });
-    }
-
-    // Left accent bar
-    pdf.setFillColor(31, 111, 235);
-    pdf.rect(mg, 18, 1.2, 22, 'F');
-
-    // Title "CASE REPORT"
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(24);
-    pdf.setTextColor(230, 237, 243);
-    pdf.text('CASE REPORT', mg + 5, 30);
-
-    // Subtitle
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.setTextColor(139, 148, 158);
-    pdf.text('Technical Support Documentation  \u00b7  Trimble Inc.', mg + 5, 40);
-
-    // Date/time (below stripe)
-    pdf.setFontSize(8.5);
-    pdf.setTextColor(100, 110, 130);
-    pdf.text(`${dateStr}  \u00b7  ${timeStr}`, mg, 62);
-
-    // Separator line
-    pdf.setDrawColor(220, 228, 240);
-    pdf.setLineWidth(0.3);
-    pdf.line(mg, 67, pageW - mg, 67);
-
-    /* ── Bitacora — multi-page if needed, fixed font ── */
-    const BODY_FS   = 10.5;
-    const LINE_H    = BODY_FS * 0.56;   // ~5.9mm per line
-    const textWidth = pageW - mg * 2 - 6;
-
-    // Footer boundaries per page type
-    const COVER_FOOTER = pageH - 30;  // cover page: taller footer (name/email)
-    const CONT_FOOTER  = pageH - 16;  // continuation pages: slim footer
-    const CONT_TOP     = 20;          // y where content starts on continuation pages
-
-    let y          = 77;              // start of content on cover page
-    let bitPage    = 1;              // current bitácora page index
-
-    // Helper: current safe bottom limit
-    function safeBottom() { return bitPage === 1 ? COVER_FOOTER : CONT_FOOTER; }
-
-    // Draw the slim footer on a continuation bitácora page, then add a new PDF page
-    function pageBreak() {
-      // Slim footer on current page
-      pdf.setFillColor(240, 244, 252);
-      pdf.rect(0, pageH - 13, pageW, 13, 'F');
-      pdf.setDrawColor(210, 220, 240);
-      pdf.setLineWidth(0.25);
-      pdf.line(0, pageH - 13, pageW, pageH - 13);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7.5);
-      pdf.setTextColor(100, 115, 145);
-      pdf.text('Wagner A. Barrera  \u00b7  Trimble Inc.', mg, pageH - 4);
-      // Page number filled in after we know total — leave placeholder
-      bitPage++;
-      pdf.addPage();
-      // Continuation page header
-      pdf.setFillColor(248, 250, 255);
-      pdf.rect(0, 0, pageW, 13, 'F');
-      pdf.setDrawColor(215, 225, 242);
-      pdf.setLineWidth(0.25);
-      pdf.line(0, 13, pageW, 13);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7.5);
-      pdf.setTextColor(100, 115, 145);
-      pdf.text('CASE REPORT  \u00b7  Trimble Inc.', mg, 9);
-      pdf.text('Continued', pageW - mg, 9, { align: 'right' });
-      y = CONT_TOP;
-    }
-
-    // Ensure there is at least `needed` mm of vertical space, breaking page if not
-    function ensureSpace(needed) {
-      if (y + needed > safeBottom()) pageBreak();
-    }
-
-    // Customer name block
-    if (customer) {
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(13);
-      pdf.setTextColor(20, 30, 55);
-      const cLines = pdf.splitTextToSize(customer, pageW - mg * 2);
-      ensureSpace(cLines.length * 6.5 + 14);
-      pdf.text(cLines, mg, y);
-      y += cLines.length * 6.5 + 4;
-      pdf.setDrawColor(200, 215, 235);
-      pdf.line(mg, y, pageW - mg, y);
-      y += 10;
-    }
-
-    // Draw one section; text flows line-by-line with page breaks as needed
-    function drawSection(label, r, g, b, bodyText) {
-      // Label bar — keep together with at least one line of body
-      ensureSpace(22);
-      pdf.setFillColor(r, g, b);
-      pdf.rect(mg, y, 2.5, 11, 'F');
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(9);
-      pdf.setTextColor(r, g, b);
-      pdf.text(label, mg + 6, y + 7.5);
-      y += 14;
-
-      if (!bodyText.trim()) {
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(BODY_FS);
-        pdf.setTextColor(160, 170, 185);
-        pdf.text('\u2014', mg + 6, y);
-        y += 8;
-      } else {
-        pdf.setFont('helvetica', 'normal');
-        pdf.setFontSize(BODY_FS);
-        pdf.setTextColor(45, 55, 75);
-        const lines = pdf.splitTextToSize(bodyText, textWidth);
-        for (const line of lines) {
-          ensureSpace(LINE_H);
-          pdf.text(line, mg + 6, y);
-          y += LINE_H;
-        }
-        y += 7; // section bottom padding
-      }
-    }
-
-    drawSection('ISSUE',      210, 60,  60,  issue);
-    drawSection('ACTION',     200, 140, 30,  action);
-    drawSection('RESOLUTION', 35,  155, 75,  resolution);
-
-    const totalPages = bitPage + images.length;
-
-    /* ── Cover footer ─────────────────────────────── */
-    pdf.setFillColor(240, 244, 252);
-    pdf.rect(0, pageH - 26, pageW, 26, 'F');
-    pdf.setDrawColor(210, 220, 240);
-    pdf.setLineWidth(0.3);
-    pdf.line(0, pageH - 26, pageW, pageH - 26);
-
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(10);
-    pdf.setTextColor(25, 55, 120);
-    pdf.text('Wagner A. Barrera', mg, pageH - 15);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.setTextColor(90, 105, 130);
-    pdf.text('Support Specialist  \u00b7  Trimble Inc.', mg, pageH - 9);
-
-    pdf.setTextColor(31, 111, 235);
-    pdf.textWithLink('wagner_barrera@trimble.com', mg, pageH - 4, { url: 'mailto:wagner_barrera@trimble.com' });
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(8);
-    pdf.setTextColor(150, 160, 180);
-    pdf.text(`Page 1 of ${totalPages}`, pageW - mg, pageH - 4, { align: 'right' });
-
-    /* ── IMAGE PAGES ─────────────────────────────── */
+    /* ── One clean page per screenshot ── */
     for (let i = 0; i < images.length; i++) {
-      pdf.addPage();
+      if (i > 0) pdf.addPage();
 
       const { dataUrl, caption } = images[i];
+
+      // Caption block — rendered ABOVE the image in large bold text
+      const CAP_FS     = 16;
+      const CAP_LINE_H = CAP_FS * 0.45; // ~7.2 mm per line
+      let capLines  = [];
+      let capBlockH = 0;
+
+      if (caption && caption.trim()) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(CAP_FS);
+        capLines  = pdf.splitTextToSize(caption.trim(), availW);
+        capBlockH = capLines.length * CAP_LINE_H + 8; // +8 mm gap below text
+      }
+
+      // Image — full resolution, original format, no compression
       const dims  = await getImageDimensions(dataUrl);
       const ratio = dims.width / dims.height;
 
-      const headerH  = 13;
-      const footerH  = 13;
-      const captionH = caption ? 12 : 0;
-      const availW   = pageW - mg * 2;
-      const availH   = pageH - headerH - footerH - captionH - mg * 2;
-
+      const imgAreaH = pageH - mg - capBlockH - mg;
       let imgW = availW;
       let imgH = imgW / ratio;
-      if (imgH > availH) { imgH = availH; imgW = imgH * ratio; }
+      if (imgH > imgAreaH) { imgH = imgAreaH; imgW = imgH * ratio; }
 
-      const x  = mg + (availW - imgW) / 2;
-      const y0 = headerH + mg + (availH - imgH) / 2;
+      const imgX = mg + (availW - imgW) / 2;
+      const imgY = mg + capBlockH;
 
-      // Header
-      pdf.setFillColor(248, 250, 255);
-      pdf.rect(0, 0, pageW, headerH, 'F');
-      pdf.setDrawColor(215, 225, 242);
-      pdf.setLineWidth(0.25);
-      pdf.line(0, headerH, pageW, headerH);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7.5);
-      pdf.setTextColor(100, 115, 145);
-      pdf.text('CASE REPORT  \u00b7  Trimble Inc.', mg, 9);
-      pdf.text(`Screenshot ${i + 1} of ${images.length}`, pageW - mg, 9, { align: 'right' });
-
-      // Image — compress or bypass based on quality setting
-      let imgData, imgFmt;
-      if (currentQuality === 'max') {
-        // Full resolution, original format — no compression
-        imgData = dataUrl;
-        imgFmt  = dataUrl.startsWith('data:image/png') ? 'PNG'
-                : dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
-      } else {
-        const preset     = QUALITY_PRESETS[currentQuality];
-        const compressed = await compressImage(dataUrl, preset.maxPx, preset.quality);
-        imgData = compressed.dataUrl;
-        imgFmt  = 'JPEG';
-      }
-      pdf.addImage(imgData, imgFmt, x, y0, imgW, imgH);
-      pdf.setDrawColor(200, 210, 230);
-      pdf.setLineWidth(0.25);
-      pdf.rect(x, y0, imgW, imgH);
-
-      // Caption
-      if (caption) {
-        const capY = y0 + imgH + 6;
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(9);
-        pdf.setTextColor(80, 95, 120);
-        const capLines = pdf.splitTextToSize(caption, availW);
-        pdf.text(capLines, pageW / 2, capY, { align: 'center' });
+      // Draw caption
+      if (capLines.length > 0) {
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(CAP_FS);
+        pdf.setTextColor(15, 23, 42);
+        pdf.text(capLines, mg, mg + CAP_LINE_H);
       }
 
-      // Footer
-      pdf.setFillColor(248, 250, 255);
-      pdf.rect(0, pageH - footerH, pageW, footerH, 'F');
-      pdf.setDrawColor(215, 225, 242);
-      pdf.setLineWidth(0.25);
-      pdf.line(0, pageH - footerH, pageW, pageH - footerH);
+      // Draw image — original format, no compression
+      const imgFmt = dataUrl.startsWith('data:image/png') ? 'PNG'
+                   : dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
+      pdf.addImage(dataUrl, imgFmt, imgX, imgY, imgW, imgH);
+
+      // Subtle page counter — bottom-right only
       pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(7.5);
-      pdf.setTextColor(100, 115, 145);
-      pdf.text('Wagner A. Barrera  \u00b7  Trimble Inc.', mg, pageH - 4);
-      pdf.text(`Page ${i + 2} of ${images.length + 1}`, pageW - mg, pageH - 4, { align: 'right' });
+      pdf.setFontSize(8);
+      pdf.setTextColor(180, 185, 195);
+      pdf.text(`${i + 1} / ${images.length}`, pageW - mg, pageH - 5, { align: 'right' });
     }
 
-    /* ── PDF filename: first line of customer + date + time ── */
-    const firstLine = customer ? customer.split('\n')[0].trim() : 'Case_Report';
-    const safeName  = firstLine.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_').substring(0, 40);
-    const dd = String(now.getDate()).padStart(2, '0');
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    /* ── Filename: first line of Customer field + date + time ── */
+    const firstLine = customer ? customer.split('\n')[0].trim() : 'Screenshots';
+    const safeName  = firstLine.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_').substring(0, 40) || 'Screenshots';
+    const dd   = String(now.getDate()).padStart(2, '0');
+    const mm   = String(now.getMonth() + 1).padStart(2, '0');
     const yyyy = now.getFullYear();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const min = String(now.getMinutes()).padStart(2, '0');
-    const filename = `${safeName}_${yyyy}-${mm}-${dd}_${hh}${min}.pdf`;
+    const hh   = String(now.getHours()).padStart(2, '0');
+    const mn   = String(now.getMinutes()).padStart(2, '0');
+    const filename = `${safeName}_${yyyy}-${mm}-${dd}_${hh}${mn}.pdf`;
 
     pdf.save(filename);
     showToast(`PDF saved: ${filename} \u2713`, 'success', 3500);
