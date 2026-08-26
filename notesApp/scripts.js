@@ -423,9 +423,13 @@ downloadPdfBtn.addEventListener('click', async () => {
   }
 });
 
-/* ═══════════════════════════════════════════════════
-   DOCX GENERATION
-═══════════════════════════════════════════════════ */
+/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
+   DOCX GENERATION  (JSZip + raw OOXML)
+\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
+function xmlEsc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 if (downloadDocxBtn) downloadDocxBtn.addEventListener('click', async () => {
   if (images.length === 0) return;
 
@@ -435,83 +439,145 @@ if (downloadDocxBtn) downloadDocxBtn.addEventListener('click', async () => {
   document.body.appendChild(overlay);
 
   try {
-    if (!window.docx) {
-      await loadScript('https://unpkg.com/docx@8.2.4/build/index.js');
+    if (!window.JSZip) {
+      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
     }
 
-    const { Document, Packer, Paragraph, TextRun, ImageRun, AlignmentType, SpacingType } = window.docx;
+    const zip = new JSZip();
 
-    // Max usable width in Word: A4 minus 2.54cm margins each side ≈ 595 px at 72dpi
-    const MAX_IMG_W_PX = 595;
+    // A4 page: 210mm x 297mm | 1 inch = 914400 EMU | 1mm = 36000 EMU
+    const PAGE_W_EMU   = 7560000;   // 210 mm
+    const MARGIN_EMU   = 914400;    // 25.4 mm (1 inch) each side
+    const MAX_W_EMU    = PAGE_W_EMU - 2 * MARGIN_EMU; // ~160 mm usable
+    const PX_TO_EMU    = 9525;      // 1 px at 96 dpi
 
-    const children = [];
+    const rels       = [];
+    const mediaFiles = [];
+    let   bodyXml    = '';
 
     for (let i = 0; i < images.length; i++) {
       const { dataUrl, caption } = images[i];
+      const dims = await getImageDimensions(dataUrl);
 
-      // Caption paragraph — bold, 18pt
+      // Scale to fit page width
+      const rawW  = dims.width  * PX_TO_EMU;
+      const rawH  = dims.height * PX_TO_EMU;
+      const scale = rawW > MAX_W_EMU ? MAX_W_EMU / rawW : 1;
+      const wEmu  = Math.round(rawW * scale);
+      const hEmu  = Math.round(rawH * scale);
+
+      const rId     = `rId${i + 1}`;
+      const isPng   = dataUrl.startsWith('data:image/png');
+      const ext     = isPng ? 'png' : 'jpg';
+      const imgName = `image${i + 1}.${ext}`;
+
+      mediaFiles.push({ name: imgName, data: dataUrl.split(',')[1] });
+      rels.push({ rId, name: imgName });
+
+      // Caption paragraph (bold, 18pt)
       if (caption && caption.trim()) {
-        children.push(new Paragraph({
-          children: [
-            new TextRun({
-              text: caption.trim(),
-              bold: true,
-              size: 36,        // half-points → 18pt
-              font: 'Arial',
-              color: '0F1726',
-            })
-          ],
-          spacing: { after: 160 }
-        }));
+        bodyXml += `<w:p><w:pPr><w:spacing w:after="120"/></w:pPr>` +
+          `<w:r><w:rPr><w:b/><w:sz w:val="36"/><w:szCs w:val="36"/>` +
+          `<w:color w:val="0F1726"/></w:rPr>` +
+          `<w:t>${xmlEsc(caption.trim())}</w:t></w:r></w:p>`;
       }
 
-      // Decode dataUrl → Uint8Array
-      const base64  = dataUrl.split(',')[1];
-      const binary  = atob(base64);
-      const bytes   = new Uint8Array(binary.length);
-      for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
-
-      // Proportional sizing
-      const dims = await getImageDimensions(dataUrl);
-      let imgW = Math.min(dims.width, MAX_IMG_W_PX);
-      let imgH = Math.round(imgW * (dims.height / dims.width));
-
-      const imgType = dataUrl.startsWith('data:image/png') ? 'PNG'
-                    : dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
-
-      children.push(new Paragraph({
-        children: [
-          new ImageRun({
-            data: bytes.buffer,
-            transformation: { width: imgW, height: imgH },
-            type: imgType.toLowerCase(),
-          })
-        ],
-        spacing: { after: i < images.length - 1 ? 480 : 0 }
-      }));
+      // Image paragraph (DrawingML inline)
+      const spacingAfter = i < images.length - 1 ? '720' : '0';
+      bodyXml +=
+        `<w:p><w:pPr><w:spacing w:after="${spacingAfter}"/></w:pPr><w:r><w:drawing>` +
+        `<wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
+        `<wp:extent cx="${wEmu}" cy="${hEmu}"/>` +
+        `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+        `<wp:docPr id="${i+1}" name="Img${i+1}"/>` +
+        `<wp:cNvGraphicFramePr>` +
+          `<a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>` +
+        `</wp:cNvGraphicFramePr>` +
+        `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">` +
+          `<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+            `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+              `<pic:nvPicPr><pic:cNvPr id="${i+1}" name="Img${i+1}"/><pic:cNvPicPr/></pic:nvPicPr>` +
+              `<pic:blipFill>` +
+                `<a:blip r:embed="${rId}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>` +
+                `<a:stretch><a:fillRect/></a:stretch>` +
+              `</pic:blipFill>` +
+              `<pic:spPr>` +
+                `<a:xfrm><a:off x="0" y="0"/><a:ext cx="${wEmu}" cy="${hEmu}"/></a:xfrm>` +
+                `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
+              `</pic:spPr>` +
+            `</pic:pic>` +
+          `</a:graphicData>` +
+        `</a:graphic>` +
+        `</wp:inline></w:drawing></w:r></w:p>`;
     }
 
-    const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: { top: 914400 * 0.5, bottom: 914400 * 0.5, left: 914400 * 0.5, right: 914400 * 0.5 }
-          }
-        },
-        children
-      }]
+    // ── [Content_Types].xml ──
+    zip.file('[Content_Types].xml',
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+      `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
+      `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
+      `<Default Extension="xml"  ContentType="application/xml"/>` +
+      `<Default Extension="png"  ContentType="image/png"/>` +
+      `<Default Extension="jpg"  ContentType="image/jpeg"/>` +
+      `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
+      `</Types>`
+    );
+
+    // ── _rels/.rels ──
+    zip.file('_rels/.rels',
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+      `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+      `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>` +
+      `</Relationships>`
+    );
+
+    // ── word/_rels/document.xml.rels ──
+    const relItems = rels.map(r =>
+      `<Relationship Id="${r.rId}" ` +
+      `Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" ` +
+      `Target="media/${r.name}"/>`
+    ).join('');
+    zip.file('word/_rels/document.xml.rels',
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+      `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+      relItems +
+      `</Relationships>`
+    );
+
+    // ── word/document.xml ──
+    zip.file('word/document.xml',
+      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+      `<w:document` +
+      ` xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"` +
+      ` xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">` +
+      `<w:body>` +
+      bodyXml +
+      `<w:sectPr>` +
+        `<w:pgSz w:w="11906" w:h="16838"/>` +
+        `<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/>` +
+      `</w:sectPr>` +
+      `</w:body></w:document>`
+    );
+
+    // ── word/media/* ──
+    for (const m of mediaFiles) {
+      zip.file(`word/media/${m.name}`, m.data, { base64: true });
+    }
+
+    const blob = await zip.generateAsync({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      compression: 'DEFLATE',
     });
 
-    const buffer = await Packer.toBuffer(doc);
-    const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    const url    = URL.createObjectURL(blob);
-    const a      = document.createElement('a');
-    a.href       = url;
-    a.download   = buildFilename('docx');
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = buildFilename('docx');
     a.click();
     URL.revokeObjectURL(url);
 
-    showToast(`DOCX saved \u2713`, 'success', 3500);
+    showToast('DOCX saved \u2713', 'success', 3500);
 
   } catch (err) {
     console.error('DOCX generation error:', err);
