@@ -3,38 +3,36 @@
 /* ═══════════════════════════════════════════════════
    DOM REFS
 ═══════════════════════════════════════════════════ */
-const copyButton      = document.getElementById('copyButton');
-const clearButton     = document.getElementById('clearButton');
-const saveCaseBtn     = document.getElementById('saveCaseBtn');
-const statusBadge     = document.getElementById('statusBadge');
-const previewText     = document.getElementById('previewText');
-const toast           = document.getElementById('toast');
+const copyButton     = document.getElementById('copyButton');
+const clearButton    = document.getElementById('clearButton');
+const saveCaseBtn    = document.getElementById('saveCaseBtn');
+const statusBadge    = document.getElementById('statusBadge');
+const previewText    = document.getElementById('previewText');
+const toast          = document.getElementById('toast');
 
-const nameText        = document.getElementById('nameText');
-const issueText       = document.getElementById('issueText');
-const actionText      = document.getElementById('actionText');
-const resolutionText  = document.getElementById('resolutionText');
-const allTextareas    = [nameText, issueText, actionText, resolutionText];
+const nameText       = document.getElementById('nameText');
+const issueText      = document.getElementById('issueText');
+const actionText     = document.getElementById('actionText');
+const resolutionText = document.getElementById('resolutionText');
+const allTextareas   = [nameText, issueText, actionText, resolutionText];
 
-const canvasDropzone  = document.getElementById('canvasDropzone');
-const canvasScroll    = document.getElementById('canvasScroll');
-const canvasImages    = document.getElementById('canvasImages');
-const canvasCount     = document.getElementById('canvasCount');
-const downloadPdfBtn  = document.getElementById('downloadPdfBtn');
-const clearCanvasBtn  = document.getElementById('clearCanvasBtn');
-const fileInput       = document.getElementById('fileInput');
-const fileInputExtra  = document.getElementById('fileInputExtra');
-const selectFileBtn   = document.getElementById('selectFileBtn');
-const addMoreBtn      = document.getElementById('addMoreBtn');
-const panelLeft       = document.getElementById('panelLeft');
-const panelDivider    = document.getElementById('panelDivider');
-const panelRight      = document.getElementById('panelRight');
+const canvasDropzone = document.getElementById('canvasDropzone');
+const canvasScroll   = document.getElementById('canvasScroll');
+const canvasImages   = document.getElementById('canvasImages');
+const canvasCount    = document.getElementById('canvasCount');
+const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+const fileInput      = document.getElementById('fileInput');
+const fileInputExtra = document.getElementById('fileInputExtra');
+const selectFileBtn  = document.getElementById('selectFileBtn');
+const addMoreBtn     = document.getElementById('addMoreBtn');
+const panelLeft      = document.getElementById('panelLeft');
+const panelDivider   = document.getElementById('panelDivider');
+const panelRight     = document.getElementById('panelRight');
 
 /* ═══════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════ */
-let images       = [];
-let imgIdCounter = 0;
+let images = [], imgIdCounter = 0;
 
 /* ═══════════════════════════════════════════════════
    UNLOAD GUARD
@@ -71,9 +69,7 @@ function buildNoteHTML() {
     `<p><strong>Action:</strong><br>${a}</p><p><strong>Resolution:</strong><br>${r}</p></div>`;
 }
 
-function updatePreview() {
-  if (previewText) previewText.textContent = buildNotePlain();
-}
+function updatePreview() { if (previewText) previewText.textContent = buildNotePlain(); }
 
 function updateCanvasCount() {
   const n = images.length;
@@ -81,17 +77,27 @@ function updateCanvasCount() {
   downloadPdfBtn.disabled = n === 0;
 }
 
-/* ── PDF Quality picker ── */
-let currentQuality = localStorage.getItem('pdfQuality') || 'mod';
-document.querySelectorAll('.quality-btn').forEach(btn => {
-  if (btn.dataset.quality === currentQuality) btn.classList.add('active');
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentQuality = btn.dataset.quality;
-    localStorage.setItem('pdfQuality', currentQuality);
-  });
-});
+/* ── Filename builder — first line of Customer Information ── */
+function buildSaveFilename(ext) {
+  const customer  = nameText.value.trim();
+  const firstLine = customer ? customer.split('\n')[0].trim() : 'Case Report';
+  const safe      = firstLine.replace(/[<>:"/\\|?*\n\r]/g,' ').trim().replace(/\s+/g,'_').substring(0, 60) || 'Case_Report';
+  const now = new Date();
+  const dd  = String(now.getDate()).padStart(2,'0');
+  const mm  = String(now.getMonth()+1).padStart(2,'0');
+  const yy  = now.getFullYear();
+  const hh  = String(now.getHours()).padStart(2,'0');
+  const mn  = String(now.getMinutes()).padStart(2,'0');
+  return `${safe}_${yy}-${mm}-${dd}_${hh}${mn}.${ext}`;
+}
+
+function showOverlay(msg) {
+  const el = document.createElement('div');
+  el.className = 'pdf-overlay';
+  el.innerHTML = `<div class="pdf-spinner"><div class="spinner-ring"></div><p>${msg}</p></div>`;
+  document.body.appendChild(el);
+  return el;
+}
 
 /* ═══════════════════════════════════════════════════
    LEFT PANEL — COPY / CLEAR
@@ -167,7 +173,7 @@ function addImage(dataUrl, name = '') {
 
   const actions = document.createElement('div'); actions.className = 'image-card-actions';
   const delBtn  = document.createElement('button');
-  delBtn.className = 'img-action-btn'; delBtn.title = 'Remove image'; delBtn.textContent = '✕';
+  delBtn.className = 'img-action-btn'; delBtn.title = 'Remove'; delBtn.textContent = '✕';
   delBtn.addEventListener('click', () => removeImage(id, card));
   actions.appendChild(delBtn);
 
@@ -230,13 +236,6 @@ document.addEventListener('paste', e => {
   if (found) showToast('Screenshot added to canvas 🖼️', 'success');
 });
 
-clearCanvasBtn.addEventListener('click', () => {
-  if (images.length === 0) return;
-  if (!confirm(`Remove all ${images.length} image${images.length !== 1 ? 's' : ''} from the canvas?`)) return;
-  images = []; canvasImages.innerHTML = '';
-  updateCanvasCount(); maybeShowDropzone(); showToast('Canvas cleared', 'info');
-});
-
 /* ═══════════════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════════════ */
@@ -261,34 +260,77 @@ function xmlEsc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function buildSaveFilename(ext) {
-  // Title = Resolution field → Customer → fallback
-  const resolution = resolutionText.value.trim();
-  const customer   = nameText.value.trim();
-  const raw        = resolution || customer || 'Case Report';
-  const firstLine  = raw.split('\n')[0].trim();
-  const safe       = firstLine.replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'_').substring(0, 60) || 'Case_Report';
-  const now        = new Date();
-  const dd  = String(now.getDate()).padStart(2,'0');
-  const mm  = String(now.getMonth()+1).padStart(2,'0');
-  const yy  = now.getFullYear();
-  const hh  = String(now.getHours()).padStart(2,'0');
-  const mn  = String(now.getMinutes()).padStart(2,'0');
-  return `${safe}_${yy}-${mm}-${dd}_${hh}${mn}.${ext}`;
+/* ═══════════════════════════════════════════════════
+   INDEXED DB — persist FileSystemDirectoryHandle
+   so the user only picks a save folder once per machine
+═══════════════════════════════════════════════════ */
+const IDB_NAME  = 'case-tracker-db';
+const IDB_STORE = 'handles';
+const IDB_KEY   = 'save-directory';
+
+function openIDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(IDB_STORE);
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
 }
 
-function showOverlay(msg) {
-  const el = document.createElement('div');
-  el.className = 'pdf-overlay';
-  el.innerHTML = `<div class="pdf-spinner"><div class="spinner-ring"></div><p>${msg}</p></div>`;
-  document.body.appendChild(el);
-  return el;
+async function saveDirHandle(handle) {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(handle, IDB_KEY);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror    = e => { db.close(); reject(e.target.error); };
+  });
+}
+
+async function loadDirHandle() {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+    req.onsuccess = () => { db.close(); resolve(req.result || null); };
+    req.onerror   = e => { db.close(); reject(e.target.error); };
+  });
+}
+
+async function verifyDirPermission(handle) {
+  const opts = { mode: 'readwrite' };
+  if (await handle.queryPermission(opts) === 'granted') return true;
+  if (await handle.requestPermission(opts) === 'granted') return true;
+  return false;
+}
+
+/**
+ * Returns a FileSystemDirectoryHandle for saving files.
+ * - Loads persisted handle from IDB and verifies permission.
+ * - If none or permission denied, shows the folder picker.
+ * - forceNew = true always shows the picker (Shift+Save).
+ */
+async function getSaveDirectory(forceNew = false) {
+  if (!window.showDirectoryPicker) return null; // API not available
+
+  if (!forceNew) {
+    try {
+      const saved = await loadDirHandle();
+      if (saved && await verifyDirPermission(saved)) {
+        return { handle: saved, isNew: false };
+      }
+    } catch (e) { /* permission check failed — fall through to picker */ }
+  }
+
+  const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+  await saveDirHandle(handle);
+  return { handle, isNew: true };
 }
 
 /* ═══════════════════════════════════════════════════
-   PDF GENERATION — PAGELESS
-   Clean layout: caption (bold navy) → image → divider
-   No counter labels. No accent underline.
+   PDF GENERATION — PAGELESS, MAX QUALITY
+   Clean: caption (bold navy) → image → divider
+   No counter labels, no accent underline.
 ═══════════════════════════════════════════════════ */
 downloadPdfBtn.addEventListener('click', async () => {
   if (images.length === 0) return;
@@ -299,25 +341,20 @@ downloadPdfBtn.addEventListener('click', async () => {
     }
     const { jsPDF } = window.jspdf;
 
-    /* Layout tokens */
     const PAGE_W    = 210;
     const MG        = 20;
     const AVAIL_W   = PAGE_W - MG * 2;
-
     const CAP_FS    = 15;
-    const CAP_LH    = 7.5;     // mm per line
-    const CAP_PAD   = 9;       // gap below caption text before image
-
-    const MAX_IMG_H = 185;     // cap for very tall portraits
+    const CAP_LH    = 7.5;
+    const CAP_PAD   = 9;
+    const MAX_IMG_H = 185;
     const IMG_BDR   = 0.25;
+    const GAP_AFTER   = 22;
+    const DIVIDER_GAP = 14;
 
-    const GAP_AFTER   = 22;   // gap after image (before divider)
-    const DIVIDER_GAP = 14;   // gap after divider (before next caption)
-
-    /* Measure pass */
     const tmpPdf = new jsPDF({ unit: 'mm', format: 'a4' });
-    let totalH   = MG;
-    const items  = [];
+    let totalH = MG;
+    const items = [];
 
     for (let i = 0; i < images.length; i++) {
       const { dataUrl, caption } = images[i];
@@ -336,21 +373,19 @@ downloadPdfBtn.addEventListener('click', async () => {
       if (imgH > MAX_IMG_H) { imgH = MAX_IMG_H; imgW = imgH * ratio; }
 
       const isLast = i === images.length - 1;
-      const afterH = isLast ? 0 : GAP_AFTER + 0.2 + DIVIDER_GAP;
+      const afterH = isLast ? 0 : GAP_AFTER + 0.25 + DIVIDER_GAP;
 
       items.push({ dataUrl, capLines, capBlockH, imgW, imgH, isLast });
       totalH += capBlockH + imgH + afterH;
     }
     totalH += MG;
 
-    /* Render pass */
     const pdf = new jsPDF({ unit: 'mm', format: [PAGE_W, totalH], compress: true });
     let y = MG;
 
     for (let i = 0; i < items.length; i++) {
       const { dataUrl, capLines, capBlockH, imgW, imgH, isLast } = items[i];
 
-      /* Caption — bold dark navy, no underline */
       if (capLines.length > 0) {
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(CAP_FS);
@@ -359,17 +394,17 @@ downloadPdfBtn.addEventListener('click', async () => {
         y += capBlockH;
       }
 
-      /* Image — centered, subtle border */
       const imgX   = MG + (AVAIL_W - imgW) / 2;
       const imgFmt = dataUrl.startsWith('data:image/png') ? 'PNG'
                    : dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
+
+      // Max quality — pass original dataUrl unmodified
       pdf.addImage(dataUrl, imgFmt, imgX, y, imgW, imgH);
       pdf.setDrawColor(200, 210, 228);
       pdf.setLineWidth(IMG_BDR);
       pdf.rect(imgX, y, imgW, imgH);
       y += imgH;
 
-      /* Horizontal divider between screenshots */
       if (!isLast) {
         y += GAP_AFTER;
         pdf.setDrawColor(210, 220, 238);
@@ -390,33 +425,38 @@ downloadPdfBtn.addEventListener('click', async () => {
 });
 
 /* ═══════════════════════════════════════════════════
-   SAVE — DOCX with bitácora cover page + screenshots
-   Title = Resolution field content (or Customer / fallback)
+   SAVE — DOCX with bitácora cover + screenshots
+   Filename = first line of Customer Information
+   Saves to remembered folder (File System Access API)
+   Shift+Save to re-pick the folder
+   Falls back to browser download if API unavailable
 ═══════════════════════════════════════════════════ */
-saveCaseBtn.addEventListener('click', async () => {
+saveCaseBtn.addEventListener('click', async (e) => {
   const hasText = allTextareas.some(ta => ta.value.trim().length > 0);
   if (!hasText && images.length === 0) {
     showToast('Add some content before saving', 'info');
     return;
   }
 
-  const overlay = showOverlay('Generating DOCX…');
+  const overlay    = showOverlay('Generating DOCX…');
+  const forceNew   = e.shiftKey; // Shift+Save → pick a new folder
+
   try {
+    /* ── Generate DOCX blob ── */
     if (!window.JSZip) {
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
     }
     const zip = new JSZip();
 
-    /* EMU constants for A4 */
-    const PAGE_W_EMU = 7560000;          // 210 mm
-    const MARGIN_EMU = 914400;           // 25.4 mm (1 inch)
+    const PAGE_W_EMU = 7560000;
+    const MARGIN_EMU = 914400;
     const MAX_W_EMU  = PAGE_W_EMU - 2 * MARGIN_EMU;
-    const PX_TO_EMU  = 9525;            // 1 px at 96 dpi
+    const PX_TO_EMU  = 9525;
 
     const rels = [], mediaFiles = [];
     let bodyXml = '';
 
-    /* ── Cover page: Bitácora table ── */
+    /* Cover — bitácora table */
     const customer   = nameText.value.trim()       || '—';
     const issue      = issueText.value.trim()      || '—';
     const action     = actionText.value.trim()     || '—';
@@ -424,7 +464,6 @@ saveCaseBtn.addEventListener('click', async () => {
     const dateStr    = new Date().toLocaleDateString('en-US',
       { year: 'numeric', month: 'long', day: 'numeric' });
 
-    /* Report header */
     bodyXml +=
       `<w:p><w:pPr><w:spacing w:before="0" w:after="280"/></w:pPr>` +
       `<w:r><w:rPr><w:b/><w:sz w:val="36"/><w:szCs w:val="36"/><w:color w:val="0D2461"/></w:rPr>` +
@@ -432,9 +471,7 @@ saveCaseBtn.addEventListener('click', async () => {
       `<w:r><w:rPr><w:sz w:val="22"/><w:color w:val="6B7A99"/></w:rPr>` +
         `<w:t xml:space="preserve">   ·   ${xmlEsc(dateStr)}</w:t></w:r></w:p>`;
 
-    /* Table layout — label column (25%) + value column (75%) */
-    const LABEL_W = 2268; // twips ≈ 4 cm
-    const VALUE_W = 7092; // twips ≈ 12.5 cm
+    const LABEL_W = 2268, VALUE_W = 7092;
     const borderXml =
       `<w:tblBorders>` +
       ['top','left','bottom','right','insideH','insideV'].map(s =>
@@ -449,20 +486,14 @@ saveCaseBtn.addEventListener('click', async () => {
         `<w:r><w:rPr><w:sz w:val="20"/><w:color w:val="1E2E4A"/></w:rPr>` +
         `<w:t xml:space="preserve">${xmlEsc(ln || ' ')}</w:t></w:r></w:p>`
       ).join('');
-      return (
-        `<w:tr>` +
-        /* Label cell */
+      return `<w:tr>` +
         `<w:tc><w:tcPr><w:tcW w:w="${LABEL_W}" w:type="dxa"/>` +
         `<w:shd w:val="clear" w:color="auto" w:fill="EDF2FB"/></w:tcPr>` +
         `<w:p><w:pPr><w:spacing w:before="140" w:after="140"/></w:pPr>` +
         `<w:r><w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="1A3875"/></w:rPr>` +
         `<w:t>${xmlEsc(label.toUpperCase())}</w:t></w:r></w:p></w:tc>` +
-        /* Value cell */
         `<w:tc><w:tcPr><w:tcW w:w="${VALUE_W}" w:type="dxa"/></w:tcPr>` +
-        valueParas +
-        `</w:tc>` +
-        `</w:tr>`
-      );
+        valueParas + `</w:tc></w:tr>`;
     };
 
     bodyXml +=
@@ -475,12 +506,11 @@ saveCaseBtn.addEventListener('click', async () => {
       makeRow('Resolution', resolution) +
       `</w:tbl>`;
 
-    /* Page break before screenshots (only if images exist) */
     if (images.length > 0) {
       bodyXml += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
     }
 
-    /* ── Screenshot pages ── */
+    /* Screenshots */
     for (let i = 0; i < images.length; i++) {
       const { dataUrl, caption } = images[i];
       const dims  = await getImageDimensions(dataUrl);
@@ -490,14 +520,12 @@ saveCaseBtn.addEventListener('click', async () => {
       const wEmu  = Math.round(rawW * scale);
       const hEmu  = Math.round(rawH * scale);
       const rId   = `rId${i + 1}`;
-      const isPng = dataUrl.startsWith('data:image/png');
-      const ext   = isPng ? 'png' : 'jpg';
+      const ext   = dataUrl.startsWith('data:image/png') ? 'png' : 'jpg';
       const imgName = `image${i + 1}.${ext}`;
 
       mediaFiles.push({ name: imgName, data: dataUrl.split(',')[1] });
       rels.push({ rId, name: imgName });
 
-      /* Caption (bold 18pt dark navy) */
       if (caption && caption.trim()) {
         bodyXml +=
           `<w:p><w:pPr><w:spacing w:after="140"/></w:pPr>` +
@@ -506,13 +534,11 @@ saveCaseBtn.addEventListener('click', async () => {
           `<w:t>${xmlEsc(caption.trim())}</w:t></w:r></w:p>`;
       }
 
-      /* Image (DrawingML inline) */
       const spAfter = i < images.length - 1 ? '720' : '0';
       bodyXml +=
         `<w:p><w:pPr><w:spacing w:after="${spAfter}"/></w:pPr><w:r><w:drawing>` +
         `<wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
-        `<wp:extent cx="${wEmu}" cy="${hEmu}"/>` +
-        `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+        `<wp:extent cx="${wEmu}" cy="${hEmu}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>` +
         `<wp:docPr id="${i+1}" name="Img${i+1}"/>` +
         `<wp:cNvGraphicFramePr>` +
           `<a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>` +
@@ -530,12 +556,11 @@ saveCaseBtn.addEventListener('click', async () => {
                 `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
               `</pic:spPr>` +
             `</pic:pic>` +
-          `</a:graphicData>` +
-        `</a:graphic>` +
+          `</a:graphicData></a:graphic>` +
         `</wp:inline></w:drawing></w:r></w:p>`;
     }
 
-    /* ── Build ZIP / OOXML files ── */
+    /* ZIP */
     zip.file('[Content_Types].xml',
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
       `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
@@ -545,21 +570,16 @@ saveCaseBtn.addEventListener('click', async () => {
       `<Default Extension="jpg"  ContentType="image/jpeg"/>` +
       `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
       `</Types>`);
-
     zip.file('_rels/.rels',
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
       `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
       `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>` +
       `</Relationships>`);
-
-    const relItems = rels.map(r =>
-      `<Relationship Id="${r.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${r.name}"/>`
-    ).join('');
     zip.file('word/_rels/document.xml.rels',
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
       `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
-      relItems + `</Relationships>`);
-
+      rels.map(r => `<Relationship Id="${r.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${r.name}"/>`).join('') +
+      `</Relationships>`);
     zip.file('word/document.xml',
       `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
       `<w:document xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"` +
@@ -568,10 +588,7 @@ saveCaseBtn.addEventListener('click', async () => {
       `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>` +
       `<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/>` +
       `</w:sectPr></w:body></w:document>`);
-
-    for (const m of mediaFiles) {
-      zip.file(`word/media/${m.name}`, m.data, { base64: true });
-    }
+    for (const m of mediaFiles) zip.file(`word/media/${m.name}`, m.data, { base64: true });
 
     const blob = await zip.generateAsync({
       type: 'blob',
@@ -579,16 +596,42 @@ saveCaseBtn.addEventListener('click', async () => {
       compression: 'DEFLATE',
     });
 
+    const filename = buildSaveFilename('docx');
+
+    /* ── Try File System Access API (Chrome / Edge) ── */
+    if (window.showDirectoryPicker) {
+      try {
+        const result = await getSaveDirectory(forceNew);
+        if (result) {
+          const { handle } = result;
+          const fileHandle = await handle.getFileHandle(filename, { create: true });
+          const writable   = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          overlay.remove();
+          showToast(
+            `✅ Saved to "${handle.name}"  |  Shift+Save to change folder`,
+            'success', 6000
+          );
+          return;
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') { overlay.remove(); return; } // user cancelled picker
+        console.warn('File System API failed, falling back to download:', err);
+      }
+    }
+
+    /* ── Fallback: browser download ── */
     const url = URL.createObjectURL(blob);
     const a   = document.createElement('a');
-    a.href = url; a.download = buildSaveFilename('docx'); a.click();
+    a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
-
+    overlay.remove();
     showToast('Case saved as DOCX ✓', 'success', 4000);
+
   } catch (err) {
     console.error('Save error:', err);
     showToast('Error saving — check console', 'error');
-  } finally {
     overlay.remove();
   }
 });
