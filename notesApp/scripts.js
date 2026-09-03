@@ -389,7 +389,7 @@ downloadPdfBtn.addEventListener('click', async () => {
       if (capLines.length > 0) {
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(CAP_FS);
-        pdf.setTextColor(13, 36, 97);
+        pdf.setTextColor(55, 95, 170);
         pdf.text(capLines, MG, y + CAP_LH);
         y += capBlockH;
       }
@@ -406,11 +406,7 @@ downloadPdfBtn.addEventListener('click', async () => {
       y += imgH;
 
       if (!isLast) {
-        y += GAP_AFTER;
-        pdf.setDrawColor(210, 220, 238);
-        pdf.setLineWidth(0.25);
-        pdf.line(MG, y, PAGE_W - MG, y);
-        y += DIVIDER_GAP;
+        y += GAP_AFTER + DIVIDER_GAP;
       }
     }
 
