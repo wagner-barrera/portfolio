@@ -3,38 +3,67 @@
 /* ═══════════════════════════════════════════════════
    DOM REFS
 ═══════════════════════════════════════════════════ */
-const copyButton      = document.getElementById('copyButton');
-const clearButton     = document.getElementById('clearButton');
-const statusBadge     = document.getElementById('statusBadge');
-const previewText     = document.getElementById('previewText'); // may be null
-const toast           = document.getElementById('toast');
+const copyButton       = document.getElementById('copyButton');
+const clearButton      = document.getElementById('clearButton');
+const saveCaseBtn      = document.getElementById('saveCaseBtn');
+const statusBadge      = document.getElementById('statusBadge');
+const previewText      = document.getElementById('previewText');
+const toast            = document.getElementById('toast');
 
-const nameText        = document.getElementById('nameText');
-const issueText       = document.getElementById('issueText');
-const actionText      = document.getElementById('actionText');
-const resolutionText  = document.getElementById('resolutionText');
-const allTextareas    = [nameText, issueText, actionText, resolutionText];
+const nameText         = document.getElementById('nameText');
+const issueText        = document.getElementById('issueText');
+const actionText       = document.getElementById('actionText');
+const resolutionText   = document.getElementById('resolutionText');
+const allTextareas     = [nameText, issueText, actionText, resolutionText];
 
-const canvasDropzone  = document.getElementById('canvasDropzone');
-const canvasScroll    = document.getElementById('canvasScroll');
-const canvasImages    = document.getElementById('canvasImages');
-const canvasCount     = document.getElementById('canvasCount');
-const downloadPdfBtn  = document.getElementById('downloadPdfBtn');
-const downloadDocxBtn = document.getElementById('downloadDocxBtn');
-const clearCanvasBtn  = document.getElementById('clearCanvasBtn');
-const fileInput       = document.getElementById('fileInput');
-const fileInputExtra  = document.getElementById('fileInputExtra');
-const selectFileBtn   = document.getElementById('selectFileBtn');
-const addMoreBtn      = document.getElementById('addMoreBtn');
-const panelLeft       = document.getElementById('panelLeft');
-const panelDivider    = document.getElementById('panelDivider');
-const panelRight      = document.getElementById('panelRight');
+const canvasDropzone   = document.getElementById('canvasDropzone');
+const canvasScroll     = document.getElementById('canvasScroll');
+const canvasImages     = document.getElementById('canvasImages');
+const canvasCount      = document.getElementById('canvasCount');
+const downloadPdfBtn   = document.getElementById('downloadPdfBtn');
+const downloadDocxBtn  = document.getElementById('downloadDocxBtn');
+const openGoogleDocBtn = document.getElementById('openGoogleDocBtn');
+const clearCanvasBtn   = document.getElementById('clearCanvasBtn');
+const fileInput        = document.getElementById('fileInput');
+const fileInputExtra   = document.getElementById('fileInputExtra');
+const selectFileBtn    = document.getElementById('selectFileBtn');
+const addMoreBtn       = document.getElementById('addMoreBtn');
+const panelLeft        = document.getElementById('panelLeft');
+const panelDivider     = document.getElementById('panelDivider');
+const panelRight       = document.getElementById('panelRight');
+
+// Google Drive modal refs
+const gdriveBackdrop   = document.getElementById('gdriveModalBackdrop');
+const gdriveClientIn   = document.getElementById('gdriveClientIdInput');
+const gdriveModalSave  = document.getElementById('gdriveModalSave');
+const gdriveModalCancel= document.getElementById('gdriveModalCancel');
+const gdriveClearCreds = document.getElementById('gdriveClearCreds');
+
+/* ═══════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════ */
+const GDRIVE_FOLDER_ID = '1TugLCpYNAY8s1Qv2FVYTRkQQEyE5VaMf';
+const GDRIVE_SCOPE     = 'https://www.googleapis.com/auth/drive.file';
+const GIS_SRC          = 'https://accounts.google.com/gsi/client';
 
 /* ═══════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════ */
 let images       = [];
 let imgIdCounter = 0;
+
+/* ═══════════════════════════════════════════════════
+   UNLOAD GUARD — prevent accidental refresh/close
+═══════════════════════════════════════════════════ */
+window.addEventListener('beforeunload', e => {
+  const hasText  = allTextareas.some(ta => ta.value.trim().length > 0);
+  const hasImgs  = images.length > 0;
+  if (hasText || hasImgs) {
+    e.preventDefault();
+    e.returnValue = 'You have unsaved work. Are you sure you want to leave?';
+    return e.returnValue;
+  }
+});
 
 /* ═══════════════════════════════════════════════════
    UTILITIES
@@ -47,25 +76,17 @@ function showToast(msg, type = 'info', duration = 2500) {
 }
 
 function buildNotePlain() {
-  const c = nameText.value.trim();
-  const i = issueText.value.trim();
-  const a = actionText.value.trim();
-  const r = resolutionText.value.trim();
+  const c = nameText.value.trim(), i = issueText.value.trim();
+  const a = actionText.value.trim(), r = resolutionText.value.trim();
   return `${c}\n\nIssue: \n${i}\n\nAction: \n${a}\n\nResolution: \n${r}`;
 }
 
 function buildNoteHTML() {
   const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-  const c = esc(nameText.value.trim());
-  const i = esc(issueText.value.trim());
-  const a = esc(actionText.value.trim());
-  const r = esc(resolutionText.value.trim());
+  const [c,i,a,r] = [nameText,issueText,actionText,resolutionText].map(t => esc(t.value.trim()));
   return `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1a1a1a;">` +
-    `<p>${c}</p>` +
-    `<p><strong>Issue:</strong><br>${i}</p>` +
-    `<p><strong>Action:</strong><br>${a}</p>` +
-    `<p><strong>Resolution:</strong><br>${r}</p>` +
-    `</div>`;
+    `<p>${c}</p><p><strong>Issue:</strong><br>${i}</p>` +
+    `<p><strong>Action:</strong><br>${a}</p><p><strong>Resolution:</strong><br>${r}</p></div>`;
 }
 
 function updatePreview() {
@@ -74,23 +95,16 @@ function updatePreview() {
 
 function updateCanvasCount() {
   const n = images.length;
-  canvasCount.textContent  = `${n} image${n !== 1 ? 's' : ''}`;
+  canvasCount.textContent = `${n} image${n !== 1 ? 's' : ''}`;
   downloadPdfBtn.disabled  = n === 0;
-  if (downloadDocxBtn) downloadDocxBtn.disabled = n === 0;
+  if (downloadDocxBtn)  downloadDocxBtn.disabled  = n === 0;
+  if (openGoogleDocBtn) openGoogleDocBtn.disabled = n === 0;
 }
 
 /* ── PDF Quality picker ── */
-const QUALITY_PRESETS = {
-  min: { maxPx: 1000, quality: 0.65 },
-  mod: { maxPx: 1400, quality: 0.78 },
-  max: { bypass: true },
-};
 let currentQuality = localStorage.getItem('pdfQuality') || 'mod';
-
 document.querySelectorAll('.quality-btn').forEach(btn => {
   if (btn.dataset.quality === currentQuality) btn.classList.add('active');
-  else btn.classList.remove('active');
-
   btn.addEventListener('click', () => {
     document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -100,49 +114,38 @@ document.querySelectorAll('.quality-btn').forEach(btn => {
 });
 
 /* ═══════════════════════════════════════════════════
-   LEFT PANEL — COPY
+   LEFT PANEL — COPY / CLEAR
 ═══════════════════════════════════════════════════ */
 copyButton.addEventListener('click', async () => {
-  const plain = buildNotePlain();
-  const html  = buildNoteHTML();
+  const plain = buildNotePlain(), html = buildNoteHTML();
   let copiedRich = false;
-
   if (window.ClipboardItem) {
     try {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'text/html':  new Blob([html],  { type: 'text/html' }),
-          'text/plain': new Blob([plain], { type: 'text/plain' }),
-        })
-      ]);
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html':  new Blob([html],  { type: 'text/html' }),
+        'text/plain': new Blob([plain], { type: 'text/plain' }),
+      })]);
       copiedRich = true;
-    } catch (e) { /* fall through */ }
+    } catch(e) {}
   }
-
   if (!copiedRich) {
     try { await navigator.clipboard.writeText(plain); }
-    catch (e) { showToast('Could not access clipboard', 'error'); return; }
+    catch(e) { showToast('Could not access clipboard', 'error'); return; }
   }
-
-  copyButton.innerHTML = '<span class="btn-icon">\u2705</span><span class="btn-label">Copied!</span>';
+  copyButton.innerHTML = '<span class="btn-icon">✅</span><span class="btn-label">Copied!</span>';
   copyButton.classList.add('copied');
-  statusBadge.textContent = 'Copied!';
-  statusBadge.classList.add('copying');
-  showToast(copiedRich ? 'Copied with bold labels \u2713' : 'Copied (plain text) \u2713', 'success');
-
+  statusBadge.textContent = 'Copied!'; statusBadge.classList.add('copying');
+  showToast(copiedRich ? 'Copied with bold labels ✓' : 'Copied (plain text) ✓', 'success');
   setTimeout(() => {
-    copyButton.innerHTML = '<span class="btn-icon btn-copy-icon">\uD83D\uDCCB</span><span class="btn-label">Copy</span>';
+    copyButton.innerHTML = '<span class="btn-icon btn-copy-icon">📋</span><span class="btn-label">Copy</span>';
     copyButton.classList.remove('copied');
-    statusBadge.textContent = 'Ready';
-    statusBadge.classList.remove('copying');
+    statusBadge.textContent = 'Ready'; statusBadge.classList.remove('copying');
   }, 2500);
 });
 
 clearButton.addEventListener('click', () => {
   allTextareas.forEach(ta => (ta.value = ''));
-  updatePreview();
-  showToast('Fields cleared', 'info');
-  nameText.focus();
+  updatePreview(); showToast('Fields cleared', 'info'); nameText.focus();
 });
 
 allTextareas.forEach(ta => ta.addEventListener('input', updatePreview));
@@ -152,63 +155,48 @@ updatePreview();
    RIGHT PANEL — IMAGE CANVAS
 ═══════════════════════════════════════════════════ */
 function showCanvas() {
-  canvasDropzone.style.display     = 'none';
-  canvasScroll.style.display       = 'flex';
+  canvasDropzone.style.display = 'none';
+  canvasScroll.style.display = 'flex';
   canvasScroll.style.flexDirection = 'column';
 }
 function maybeShowDropzone() {
   if (images.length === 0) {
     canvasDropzone.style.display = 'flex';
-    canvasScroll.style.display   = 'none';
+    canvasScroll.style.display = 'none';
   }
 }
 
 function addImage(dataUrl, name = '') {
-  const id = ++imgIdCounter;
-  const ts = new Date().toLocaleTimeString();
+  const id = ++imgIdCounter, ts = new Date().toLocaleTimeString();
   images.push({ id, dataUrl, name, timestamp: ts, caption: '' });
   const idx = images.length - 1;
 
-  const card      = document.createElement('div');
-  card.className  = 'image-card';
-  card.dataset.id = id;
+  const card = document.createElement('div');
+  card.className = 'image-card'; card.dataset.id = id;
 
-  const caption           = document.createElement('div');
-  caption.className       = 'image-caption';
-  caption.contentEditable = 'true';
-  caption.dataset.placeholder = 'Add a description\u2026';
-  caption.title           = 'Click to add a description';
+  const caption = document.createElement('div');
+  caption.className = 'image-caption'; caption.contentEditable = 'true';
+  caption.dataset.placeholder = 'Add a description…'; caption.title = 'Click to add a description';
   caption.addEventListener('input', () => { images[idx].caption = caption.innerText.trim(); });
   caption.addEventListener('paste', e => e.stopPropagation());
 
-  const img   = document.createElement('img');
-  img.src     = dataUrl;
-  img.alt     = name || `Screenshot ${id}`;
-  img.loading = 'lazy';
-  img.title   = 'Double-click to zoom';
+  const img = document.createElement('img');
+  img.src = dataUrl; img.alt = name || `Screenshot ${id}`;
+  img.loading = 'lazy'; img.title = 'Double-click to zoom';
   img.addEventListener('dblclick', () => openLightbox(idx));
 
-  const actions     = document.createElement('div');
-  actions.className = 'image-card-actions';
-  const deleteBtn       = document.createElement('button');
-  deleteBtn.className   = 'img-action-btn';
-  deleteBtn.title       = 'Remove image';
-  deleteBtn.textContent = '\u2715';
+  const actions = document.createElement('div'); actions.className = 'image-card-actions';
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'img-action-btn'; deleteBtn.title = 'Remove image'; deleteBtn.textContent = '✕';
   deleteBtn.addEventListener('click', () => removeImage(id, card));
   actions.appendChild(deleteBtn);
 
-  const label     = document.createElement('div');
-  label.className = 'image-label';
-  label.innerHTML = `<span class="image-number">#${images.length}</span><span>${name || 'Screenshot'} \u00b7 ${ts}</span>`;
+  const label = document.createElement('div'); label.className = 'image-label';
+  label.innerHTML = `<span class="image-number">#${images.length}</span><span>${name || 'Screenshot'} · ${ts}</span>`;
 
-  card.appendChild(caption);
-  card.appendChild(img);
-  card.appendChild(actions);
-  card.appendChild(label);
+  card.appendChild(caption); card.appendChild(img); card.appendChild(actions); card.appendChild(label);
   canvasImages.appendChild(card);
-
-  showCanvas();
-  updateCanvasCount();
+  showCanvas(); updateCanvasCount();
   setTimeout(() => caption.focus(), 80);
   setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 }
@@ -219,21 +207,20 @@ function removeImage(id, cardEl) {
   setTimeout(() => {
     cardEl.remove();
     canvasImages.querySelectorAll('.image-number').forEach((el, i) => { el.textContent = `#${i + 1}`; });
-    updateCanvasCount();
-    maybeShowDropzone();
+    updateCanvasCount(); maybeShowDropzone();
   }, 180);
 }
 
 function processFiles(files) {
   if (!files || files.length === 0) return;
-  const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
-  if (imageFiles.length === 0) { showToast('No image files found', 'error'); return; }
-  imageFiles.forEach(file => {
-    const reader  = new FileReader();
+  const imgs = Array.from(files).filter(f => f.type.startsWith('image/'));
+  if (imgs.length === 0) { showToast('No image files found', 'error'); return; }
+  imgs.forEach(file => {
+    const reader = new FileReader();
     reader.onload = e => addImage(e.target.result, file.name);
     reader.readAsDataURL(file);
   });
-  showToast(`Adding ${imageFiles.length} image${imageFiles.length !== 1 ? 's' : ''}\u2026`, 'info', 1500);
+  showToast(`Adding ${imgs.length} image${imgs.length !== 1 ? 's' : ''}…`, 'info', 1500);
 }
 
 selectFileBtn.addEventListener('click', () => fileInput.click());
@@ -244,10 +231,7 @@ fileInputExtra.addEventListener('change', e => { processFiles(e.target.files); e
 [canvasDropzone, panelRight].forEach(el => {
   el.addEventListener('dragover',  e => { e.preventDefault(); canvasDropzone.classList.add('drag-over'); });
   el.addEventListener('dragleave', e => { if (!panelRight.contains(e.relatedTarget)) canvasDropzone.classList.remove('drag-over'); });
-  el.addEventListener('drop', e => {
-    e.preventDefault(); canvasDropzone.classList.remove('drag-over');
-    processFiles(e.dataTransfer.files);
-  });
+  el.addEventListener('drop', e => { e.preventDefault(); canvasDropzone.classList.remove('drag-over'); processFiles(e.dataTransfer.files); });
 });
 
 document.addEventListener('paste', e => {
@@ -262,17 +246,14 @@ document.addEventListener('paste', e => {
       reader.readAsDataURL(file);
     }
   }
-  if (found) showToast('Screenshot added to canvas \uD83D\uDDBC\uFE0F', 'success');
+  if (found) showToast('Screenshot added to canvas 🖼️', 'success');
 });
 
 clearCanvasBtn.addEventListener('click', () => {
   if (images.length === 0) return;
   if (!confirm(`Remove all ${images.length} image${images.length !== 1 ? 's' : ''} from the canvas?`)) return;
-  images = [];
-  canvasImages.innerHTML = '';
-  updateCanvasCount();
-  maybeShowDropzone();
-  showToast('Canvas cleared', 'info');
+  images = []; canvasImages.innerHTML = '';
+  updateCanvasCount(); maybeShowDropzone(); showToast('Canvas cleared', 'info');
 });
 
 /* ═══════════════════════════════════════════════════
@@ -280,360 +261,562 @@ clearCanvasBtn.addEventListener('click', () => {
 ═══════════════════════════════════════════════════ */
 function loadScript(src) {
   return new Promise((resolve, reject) => {
-    const s  = document.createElement('script');
-    s.src    = src;
-    s.onload = resolve;
-    s.onerror = reject;
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
     document.head.appendChild(s);
   });
 }
 
 function getImageDimensions(dataUrl) {
   return new Promise(resolve => {
-    const img  = new Image();
-    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.src    = dataUrl;
-  });
-}
-
-function compressImage(dataUrl, maxPx = 1000, quality = 0.75) {
-  return new Promise(resolve => {
     const img = new Image();
-    img.onload = () => {
-      const { naturalWidth: w, naturalHeight: h } = img;
-      const scale = Math.min(1, maxPx / Math.max(w, h));
-      const sw = Math.round(w * scale);
-      const sh = Math.round(h * scale);
-      const cv = document.createElement('canvas');
-      cv.width = sw; cv.height = sh;
-      const ctx = cv.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, sw, sh);
-      ctx.drawImage(img, 0, 0, sw, sh);
-      resolve({ dataUrl: cv.toDataURL('image/jpeg', quality), width: sw, height: sh });
-    };
-    img.onerror = () => resolve({ dataUrl, width: 0, height: 0 });
+    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
     img.src = dataUrl;
   });
 }
 
-/* Shared filename builder */
+function xmlEsc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function buildFilename(ext) {
-  const customer = nameText.value.trim();
-  const now = new Date();
+  const customer  = nameText.value.trim();
+  const now       = new Date();
   const firstLine = customer ? customer.split('\n')[0].trim() : 'Screenshots';
-  const safeName  = firstLine.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_').substring(0, 40) || 'Screenshots';
-  const dd   = String(now.getDate()).padStart(2, '0');
-  const mm   = String(now.getMonth() + 1).padStart(2, '0');
-  const yyyy = now.getFullYear();
-  const hh   = String(now.getHours()).padStart(2, '0');
-  const mn   = String(now.getMinutes()).padStart(2, '0');
-  return `${safeName}_${yyyy}-${mm}-${dd}_${hh}${mn}.${ext}`;
+  const safeName  = firstLine.replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'_').substring(0,40) || 'Screenshots';
+  const dd = String(now.getDate()).padStart(2,'0');
+  const mm = String(now.getMonth()+1).padStart(2,'0');
+  const yy = now.getFullYear();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mn = String(now.getMinutes()).padStart(2,'0');
+  return `${safeName}_${yy}-${mm}-${dd}_${hh}${mn}.${ext}`;
+}
+
+function showOverlay(msg) {
+  const el = document.createElement('div');
+  el.className = 'pdf-overlay';
+  el.innerHTML = `<div class="pdf-spinner"><div class="spinner-ring"></div><p>${msg}</p></div>`;
+  document.body.appendChild(el);
+  return el;
 }
 
 /* ═══════════════════════════════════════════════════
-   PDF GENERATION — PAGELESS (single tall page)
+   DOCX BUILDER — JSZip + raw OOXML
+   options.includeCaseInfo  → adds bitácora table first page
+═══════════════════════════════════════════════════ */
+async function generateDocxBlob(options = {}) {
+  if (!window.JSZip) {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  }
+  const zip = new JSZip();
+
+  // A4: 210 mm × 297 mm  |  1 inch = 914400 EMU  |  1 mm = 36000 EMU
+  const PAGE_W_EMU = 7560000;
+  const MARGIN_EMU = 914400;
+  const MAX_W_EMU  = PAGE_W_EMU - 2 * MARGIN_EMU;   // ~160 mm usable
+  const PX_TO_EMU  = 9525;                            // 1 px at 96 dpi
+
+  const rels = [], mediaFiles = [];
+  let bodyXml = '';
+
+  /* ── Bitácora cover page ── */
+  if (options.includeCaseInfo) {
+    const customer   = nameText.value.trim()       || '—';
+    const issue      = issueText.value.trim()      || '—';
+    const action     = actionText.value.trim()     || '—';
+    const resolution = resolutionText.value.trim() || '—';
+    const dateStr    = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+    // Title row
+    bodyXml +=
+      `<w:p><w:pPr><w:spacing w:before="0" w:after="240"/></w:pPr>` +
+      `<w:r><w:rPr><w:b/><w:sz w:val="32"/><w:szCs w:val="32"/><w:color w:val="0D2461"/></w:rPr>` +
+      `<w:t>Case Report</w:t></w:r>` +
+      `<w:r><w:rPr><w:sz w:val="22"/><w:color w:val="6B7A99"/></w:rPr>` +
+      `<w:t xml:space="preserve">   ·   ${xmlEsc(dateStr)}</w:t></w:r></w:p>`;
+
+    // Case info table
+    const LABEL_W = 2160; // twips (~3.8 cm)
+    const VALUE_W = 7200; // twips (~12.7 cm)
+    const borderXml =
+      `<w:tblBorders>` +
+      `<w:top    w:val="single" w:sz="4" w:space="0" w:color="B8C8E0"/>` +
+      `<w:left   w:val="single" w:sz="4" w:space="0" w:color="B8C8E0"/>` +
+      `<w:bottom w:val="single" w:sz="4" w:space="0" w:color="B8C8E0"/>` +
+      `<w:right  w:val="single" w:sz="4" w:space="0" w:color="B8C8E0"/>` +
+      `<w:insideH w:val="single" w:sz="4" w:space="0" w:color="B8C8E0"/>` +
+      `<w:insideV w:val="single" w:sz="4" w:space="0" w:color="B8C8E0"/>` +
+      `</w:tblBorders>`;
+
+    const makeRow = (label, value) => {
+      const valueLines = String(value).split('\n');
+      const valueParas = valueLines.map(ln =>
+        `<w:p><w:pPr><w:spacing w:before="60" w:after="60"/></w:pPr>` +
+        `<w:r><w:rPr><w:sz w:val="20"/><w:color w:val="2D3C54"/></w:rPr>` +
+        `<w:t xml:space="preserve">${xmlEsc(ln || ' ')}</w:t></w:r></w:p>`
+      ).join('');
+      return `<w:tr>` +
+        `<w:tc><w:tcPr><w:tcW w:w="${LABEL_W}" w:type="dxa"/>` +
+        `<w:shd w:val="clear" w:color="auto" w:fill="EEF2FA"/></w:tcPr>` +
+        `<w:p><w:pPr><w:spacing w:before="120" w:after="120"/></w:pPr>` +
+        `<w:r><w:rPr><w:b/><w:sz w:val="20"/><w:color w:val="1A3875"/></w:rPr>` +
+        `<w:t>${xmlEsc(label.toUpperCase())}</w:t></w:r></w:p></w:tc>` +
+        `<w:tc><w:tcPr><w:tcW w:w="${VALUE_W}" w:type="dxa"/></w:tcPr>${valueParas}</w:tc>` +
+        `</w:tr>`;
+    };
+
+    bodyXml +=
+      `<w:tbl>` +
+      `<w:tblPr><w:tblW w:w="${LABEL_W + VALUE_W}" w:type="dxa"/>${borderXml}</w:tblPr>` +
+      `<w:tblGrid><w:gridCol w:w="${LABEL_W}"/><w:gridCol w:w="${VALUE_W}"/></w:tblGrid>` +
+      makeRow('Customer',   customer) +
+      makeRow('Issue',      issue) +
+      makeRow('Action',     action) +
+      makeRow('Resolution', resolution) +
+      `</w:tbl>`;
+
+    // Page break before screenshots
+    if (images.length > 0) {
+      bodyXml += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+    }
+  }
+
+  /* ── Screenshot sections ── */
+  for (let i = 0; i < images.length; i++) {
+    const { dataUrl, caption } = images[i];
+    const dims  = await getImageDimensions(dataUrl);
+    const rawW  = dims.width  * PX_TO_EMU;
+    const rawH  = dims.height * PX_TO_EMU;
+    const scale = rawW > MAX_W_EMU ? MAX_W_EMU / rawW : 1;
+    const wEmu  = Math.round(rawW * scale);
+    const hEmu  = Math.round(rawH * scale);
+    const rId   = `rId${i + 1}`;
+    const isPng = dataUrl.startsWith('data:image/png');
+    const ext   = isPng ? 'png' : 'jpg';
+    const imgName = `image${i + 1}.${ext}`;
+
+    mediaFiles.push({ name: imgName, data: dataUrl.split(',')[1] });
+    rels.push({ rId, name: imgName });
+
+    // Caption (bold 18pt dark navy)
+    if (caption && caption.trim()) {
+      bodyXml +=
+        `<w:p><w:pPr><w:spacing w:after="120"/></w:pPr>` +
+        `<w:r><w:rPr><w:b/><w:sz w:val="36"/><w:szCs w:val="36"/>` +
+        `<w:color w:val="0D2461"/></w:rPr>` +
+        `<w:t>${xmlEsc(caption.trim())}</w:t></w:r></w:p>`;
+    }
+
+    // Image (DrawingML inline)
+    const spacingAfter = i < images.length - 1 ? '720' : '0';
+    bodyXml +=
+      `<w:p><w:pPr><w:spacing w:after="${spacingAfter}"/></w:pPr><w:r><w:drawing>` +
+      `<wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
+      `<wp:extent cx="${wEmu}" cy="${hEmu}"/>` +
+      `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+      `<wp:docPr id="${i+1}" name="Img${i+1}"/>` +
+      `<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>` +
+      `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">` +
+        `<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+          `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+            `<pic:nvPicPr><pic:cNvPr id="${i+1}" name="Img${i+1}"/><pic:cNvPicPr/></pic:nvPicPr>` +
+            `<pic:blipFill>` +
+              `<a:blip r:embed="${rId}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>` +
+              `<a:stretch><a:fillRect/></a:stretch>` +
+            `</pic:blipFill>` +
+            `<pic:spPr>` +
+              `<a:xfrm><a:off x="0" y="0"/><a:ext cx="${wEmu}" cy="${hEmu}"/></a:xfrm>` +
+              `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
+            `</pic:spPr>` +
+          `</pic:pic>` +
+        `</a:graphicData>` +
+      `</a:graphic>` +
+      `</wp:inline></w:drawing></w:r></w:p>`;
+  }
+
+  /* ── ZIP structure ── */
+  zip.file('[Content_Types].xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+    `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
+    `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
+    `<Default Extension="xml"  ContentType="application/xml"/>` +
+    `<Default Extension="png"  ContentType="image/png"/>` +
+    `<Default Extension="jpg"  ContentType="image/jpeg"/>` +
+    `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
+    `</Types>`);
+
+  zip.file('_rels/.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+    `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+    `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>` +
+    `</Relationships>`);
+
+  const relItems = rels.map(r =>
+    `<Relationship Id="${r.rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${r.name}"/>`
+  ).join('');
+  zip.file('word/_rels/document.xml.rels',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+    `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+    relItems + `</Relationships>`);
+
+  zip.file('word/document.xml',
+    `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
+    `<w:document xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"` +
+    ` xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">` +
+    `<w:body>${bodyXml}` +
+    `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>` +
+    `<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/>` +
+    `</w:sectPr></w:body></w:document>`);
+
+  for (const m of mediaFiles) {
+    zip.file(`word/media/${m.name}`, m.data, { base64: true });
+  }
+
+  return zip.generateAsync({
+    type: 'blob',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    compression: 'DEFLATE',
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   PDF — PAGELESS, ACCESSIBLE, DARK-BLUE PALETTE
 ═══════════════════════════════════════════════════ */
 downloadPdfBtn.addEventListener('click', async () => {
   if (images.length === 0) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'pdf-overlay';
-  overlay.innerHTML = `<div class="pdf-spinner"><div class="spinner-ring"></div><p>Generating PDF\u2026</p></div>`;
-  document.body.appendChild(overlay);
-
+  const overlay = showOverlay('Generating PDF…');
   try {
     if (!window.jspdf) {
       await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
     }
-
     const { jsPDF } = window.jspdf;
 
-    // ── Layout constants (mm) ──
-    const PAGE_W   = 210;
-    const MG       = 15;
-    const AVAIL_W  = PAGE_W - MG * 2;
-    const GAP      = 12;   // gap between images
-    const CAP_FS   = 16;
-    const CAP_LH   = CAP_FS * 0.45; // ~7.2 mm per text line
+    /* ── Layout tokens ── */
+    const PAGE_W      = 210;
+    const MG          = 20;          // page margin
+    const AVAIL_W     = PAGE_W - MG * 2;
 
-    // Pre-load a temporary PDF to use splitTextToSize for measurement
+    // Counter label: "SCREENSHOT N / N"
+    const CTR_FS      = 7.5;
+    const CTR_LH      = 4;           // mm
+    const CTR_PAD     = 5;           // gap after counter
+
+    // Caption
+    const CAP_FS      = 15;
+    const CAP_LH      = 7.5;         // mm per line
+    const CAP_PAD     = 7;           // gap after last caption line
+
+    // Accent underline
+    const ACCENT_W    = 42;          // mm
+    const ACCENT_PAD  = 9;           // gap after accent line
+
+    // Image
+    const MAX_IMG_H   = 185;         // cap for very tall portraits
+    const IMG_BDR_W   = 0.25;
+
+    // Section spacing
+    const GAP_AFTER   = 22;          // gap after image (before divider)
+    const DIVIDER_GAP = 12;          // gap below divider
+
+    /* ── Measure pass ── */
     const tmpPdf = new jsPDF({ unit: 'mm', format: 'a4' });
-
-    // ── Measure total height needed ──
-    let totalH = MG;
-    const imageData = []; // cache dims for reuse
+    let totalH   = MG;
+    const items  = [];
 
     for (let i = 0; i < images.length; i++) {
       const { dataUrl, caption } = images[i];
       const dims  = await getImageDimensions(dataUrl);
       const ratio = dims.width / dims.height;
 
-      // Caption height
-      let capH = 0;
-      let capLines = [];
+      let capLines = [], capBlockH = 0;
       if (caption && caption.trim()) {
         tmpPdf.setFont('helvetica', 'bold');
         tmpPdf.setFontSize(CAP_FS);
         capLines = tmpPdf.splitTextToSize(caption.trim(), AVAIL_W);
-        capH = capLines.length * CAP_LH + 6;
+        capBlockH = capLines.length * CAP_LH + CAP_PAD + 0.5 + ACCENT_PAD;
       }
 
-      // Image height (fit to page width)
-      const imgW = AVAIL_W;
-      const imgH = imgW / ratio;
+      let imgW = AVAIL_W, imgH = imgW / ratio;
+      if (imgH > MAX_IMG_H) { imgH = MAX_IMG_H; imgW = imgH * ratio; }
 
-      imageData.push({ dataUrl, caption, dims, ratio, capLines, capH, imgW, imgH });
-      totalH += capH + imgH + (i < images.length - 1 ? GAP : 0);
+      const isLast  = i === images.length - 1;
+      const afterH  = isLast ? 0 : GAP_AFTER + 0.2 + DIVIDER_GAP;
+      const sectH   = CTR_LH + CTR_PAD + capBlockH + imgH;
+      items.push({ dataUrl, caption, capLines, capBlockH, imgW, imgH, isLast });
+      totalH += sectH + afterH;
     }
     totalH += MG;
 
-    // ── Create single tall page ──
+    /* ── Render pass ── */
     const pdf = new jsPDF({ unit: 'mm', format: [PAGE_W, totalH], compress: true });
     let y = MG;
 
-    for (let i = 0; i < imageData.length; i++) {
-      const { dataUrl, capLines, capH, imgW, imgH, ratio } = imageData[i];
+    for (let i = 0; i < items.length; i++) {
+      const { dataUrl, capLines, capBlockH, imgW, imgH, isLast } = items[i];
 
-      // Caption above image
+      // Counter label (medium blue-gray)
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(CTR_FS);
+      pdf.setTextColor(80, 110, 160);
+      pdf.text(`SCREENSHOT ${i + 1} / ${images.length}`, MG, y + CTR_LH);
+      y += CTR_LH + CTR_PAD;
+
+      // Caption (dark navy blue)
       if (capLines.length > 0) {
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(CAP_FS);
-        pdf.setTextColor(15, 23, 42);
+        pdf.setTextColor(13, 36, 97);        // dark navy
         pdf.text(capLines, MG, y + CAP_LH);
-        y += capH;
+        y += capLines.length * CAP_LH + CAP_PAD;
+
+        // Blue accent line
+        pdf.setDrawColor(30, 80, 200);
+        pdf.setLineWidth(0.5);
+        pdf.line(MG, y, MG + ACCENT_W, y);
+        y += 0.5 + ACCENT_PAD;
       }
 
-      // Image — full resolution, original format
+      // Image (centered perfectly)
+      const imgX   = MG + (AVAIL_W - imgW) / 2;
       const imgFmt = dataUrl.startsWith('data:image/png') ? 'PNG'
                    : dataUrl.startsWith('data:image/gif') ? 'GIF' : 'JPEG';
-      const imgX = MG + (AVAIL_W - imgW) / 2;
       pdf.addImage(dataUrl, imgFmt, imgX, y, imgW, imgH);
-      y += imgH + (i < imageData.length - 1 ? GAP : 0);
+
+      // Subtle border
+      pdf.setDrawColor(200, 210, 228);
+      pdf.setLineWidth(IMG_BDR_W);
+      pdf.rect(imgX, y, imgW, imgH);
+
+      y += imgH;
+
+      // Divider between screenshots
+      if (!isLast) {
+        y += GAP_AFTER;
+        pdf.setDrawColor(220, 228, 242);
+        pdf.setLineWidth(0.2);
+        pdf.line(MG, y, PAGE_W - MG, y);
+        y += DIVIDER_GAP;
+      }
     }
 
     pdf.save(buildFilename('pdf'));
-    showToast(`PDF saved \u2713`, 'success', 3500);
-
+    showToast('PDF saved ✓', 'success', 3500);
   } catch (err) {
-    console.error('PDF generation error:', err);
-    showToast('Error generating PDF \u2014 check console', 'error');
-  } finally {
-    overlay.remove();
-  }
-});
-
-/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550
-   DOCX GENERATION  (JSZip + raw OOXML)
-\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */
-function xmlEsc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-if (downloadDocxBtn) downloadDocxBtn.addEventListener('click', async () => {
-  if (images.length === 0) return;
-
-  const overlay = document.createElement('div');
-  overlay.className = 'pdf-overlay';
-  overlay.innerHTML = `<div class="pdf-spinner"><div class="spinner-ring"></div><p>Generating DOCX\u2026</p></div>`;
-  document.body.appendChild(overlay);
-
-  try {
-    if (!window.JSZip) {
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
-    }
-
-    const zip = new JSZip();
-
-    // A4 page: 210mm x 297mm | 1 inch = 914400 EMU | 1mm = 36000 EMU
-    const PAGE_W_EMU   = 7560000;   // 210 mm
-    const MARGIN_EMU   = 914400;    // 25.4 mm (1 inch) each side
-    const MAX_W_EMU    = PAGE_W_EMU - 2 * MARGIN_EMU; // ~160 mm usable
-    const PX_TO_EMU    = 9525;      // 1 px at 96 dpi
-
-    const rels       = [];
-    const mediaFiles = [];
-    let   bodyXml    = '';
-
-    for (let i = 0; i < images.length; i++) {
-      const { dataUrl, caption } = images[i];
-      const dims = await getImageDimensions(dataUrl);
-
-      // Scale to fit page width
-      const rawW  = dims.width  * PX_TO_EMU;
-      const rawH  = dims.height * PX_TO_EMU;
-      const scale = rawW > MAX_W_EMU ? MAX_W_EMU / rawW : 1;
-      const wEmu  = Math.round(rawW * scale);
-      const hEmu  = Math.round(rawH * scale);
-
-      const rId     = `rId${i + 1}`;
-      const isPng   = dataUrl.startsWith('data:image/png');
-      const ext     = isPng ? 'png' : 'jpg';
-      const imgName = `image${i + 1}.${ext}`;
-
-      mediaFiles.push({ name: imgName, data: dataUrl.split(',')[1] });
-      rels.push({ rId, name: imgName });
-
-      // Caption paragraph (bold, 18pt)
-      if (caption && caption.trim()) {
-        bodyXml += `<w:p><w:pPr><w:spacing w:after="120"/></w:pPr>` +
-          `<w:r><w:rPr><w:b/><w:sz w:val="36"/><w:szCs w:val="36"/>` +
-          `<w:color w:val="0F1726"/></w:rPr>` +
-          `<w:t>${xmlEsc(caption.trim())}</w:t></w:r></w:p>`;
-      }
-
-      // Image paragraph (DrawingML inline)
-      const spacingAfter = i < images.length - 1 ? '720' : '0';
-      bodyXml +=
-        `<w:p><w:pPr><w:spacing w:after="${spacingAfter}"/></w:pPr><w:r><w:drawing>` +
-        `<wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
-        `<wp:extent cx="${wEmu}" cy="${hEmu}"/>` +
-        `<wp:effectExtent l="0" t="0" r="0" b="0"/>` +
-        `<wp:docPr id="${i+1}" name="Img${i+1}"/>` +
-        `<wp:cNvGraphicFramePr>` +
-          `<a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>` +
-        `</wp:cNvGraphicFramePr>` +
-        `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">` +
-          `<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
-            `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
-              `<pic:nvPicPr><pic:cNvPr id="${i+1}" name="Img${i+1}"/><pic:cNvPicPr/></pic:nvPicPr>` +
-              `<pic:blipFill>` +
-                `<a:blip r:embed="${rId}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>` +
-                `<a:stretch><a:fillRect/></a:stretch>` +
-              `</pic:blipFill>` +
-              `<pic:spPr>` +
-                `<a:xfrm><a:off x="0" y="0"/><a:ext cx="${wEmu}" cy="${hEmu}"/></a:xfrm>` +
-                `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>` +
-              `</pic:spPr>` +
-            `</pic:pic>` +
-          `</a:graphicData>` +
-        `</a:graphic>` +
-        `</wp:inline></w:drawing></w:r></w:p>`;
-    }
-
-    // ── [Content_Types].xml ──
-    zip.file('[Content_Types].xml',
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
-      `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
-      `<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>` +
-      `<Default Extension="xml"  ContentType="application/xml"/>` +
-      `<Default Extension="png"  ContentType="image/png"/>` +
-      `<Default Extension="jpg"  ContentType="image/jpeg"/>` +
-      `<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>` +
-      `</Types>`
-    );
-
-    // ── _rels/.rels ──
-    zip.file('_rels/.rels',
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
-      `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
-      `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>` +
-      `</Relationships>`
-    );
-
-    // ── word/_rels/document.xml.rels ──
-    const relItems = rels.map(r =>
-      `<Relationship Id="${r.rId}" ` +
-      `Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" ` +
-      `Target="media/${r.name}"/>`
-    ).join('');
-    zip.file('word/_rels/document.xml.rels',
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
-      `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
-      relItems +
-      `</Relationships>`
-    );
-
-    // ── word/document.xml ──
-    zip.file('word/document.xml',
-      `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` +
-      `<w:document` +
-      ` xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"` +
-      ` xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">` +
-      `<w:body>` +
-      bodyXml +
-      `<w:sectPr>` +
-        `<w:pgSz w:w="11906" w:h="16838"/>` +
-        `<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/>` +
-      `</w:sectPr>` +
-      `</w:body></w:document>`
-    );
-
-    // ── word/media/* ──
-    for (const m of mediaFiles) {
-      zip.file(`word/media/${m.name}`, m.data, { base64: true });
-    }
-
-    const blob = await zip.generateAsync({
-      type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      compression: 'DEFLATE',
-    });
-
-    const url = URL.createObjectURL(blob);
-    const a   = document.createElement('a');
-    a.href     = url;
-    a.download = buildFilename('docx');
-    a.click();
-    URL.revokeObjectURL(url);
-
-    showToast('DOCX saved \u2713', 'success', 3500);
-
-  } catch (err) {
-    console.error('DOCX generation error:', err);
-    showToast('Error generating DOCX \u2014 check console', 'error');
+    console.error('PDF error:', err);
+    showToast('Error generating PDF — check console', 'error');
   } finally {
     overlay.remove();
   }
 });
 
 /* ═══════════════════════════════════════════════════
-   LIGHTBOX — double-click to zoom
+   DOCX DOWNLOAD
 ═══════════════════════════════════════════════════ */
-let lightboxEl   = null;
-let currentLbIdx = -1;
+if (downloadDocxBtn) downloadDocxBtn.addEventListener('click', async () => {
+  if (images.length === 0) return;
+  const overlay = showOverlay('Generating DOCX…');
+  try {
+    const blob = await generateDocxBlob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = buildFilename('docx'); a.click();
+    URL.revokeObjectURL(url);
+    showToast('DOCX saved ✓', 'success', 3500);
+  } catch (err) {
+    console.error('DOCX error:', err);
+    showToast('Error generating DOCX — check console', 'error');
+  } finally {
+    overlay.remove();
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   OPEN IN GOOGLE DOCS (download + open Docs tab)
+═══════════════════════════════════════════════════ */
+if (openGoogleDocBtn) openGoogleDocBtn.addEventListener('click', async () => {
+  if (images.length === 0) return;
+  const overlay = showOverlay('Preparing for Google Docs…');
+  try {
+    const blob = await generateDocxBlob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = buildFilename('docx'); a.click();
+    URL.revokeObjectURL(url);
+    setTimeout(() => window.open('https://docs.google.com/document/create', '_blank'), 600);
+    showToast('✅ Downloaded! In the new tab → File → Open → Upload. Then View → Pageless.', 'info', 9000);
+  } catch (err) {
+    console.error('Docs error:', err);
+    showToast('Error — check console', 'error');
+  } finally {
+    overlay.remove();
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   GOOGLE DRIVE — SETUP MODAL
+═══════════════════════════════════════════════════ */
+function openGDriveModal() {
+  const stored = localStorage.getItem('gdrive_client_id') || '';
+  gdriveClientIn.value = stored;
+  gdriveBackdrop.style.display = 'flex';
+  setTimeout(() => gdriveClientIn.focus(), 100);
+}
+
+function closeGDriveModal() {
+  gdriveBackdrop.style.display = 'none';
+}
+
+gdriveBackdrop.addEventListener('click', e => { if (e.target === gdriveBackdrop) closeGDriveModal(); });
+gdriveModalCancel.addEventListener('click', closeGDriveModal);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && gdriveBackdrop.style.display !== 'none') closeGDriveModal(); });
+
+gdriveModalSave.addEventListener('click', () => {
+  const id = gdriveClientIn.value.trim();
+  if (!id || !id.includes('.apps.googleusercontent.com')) {
+    gdriveClientIn.classList.add('input-error');
+    showToast('Enter a valid Client ID (ends in .apps.googleusercontent.com)', 'error', 4000);
+    setTimeout(() => gdriveClientIn.classList.remove('input-error'), 2000);
+    return;
+  }
+  localStorage.setItem('gdrive_client_id', id);
+  closeGDriveModal();
+  showToast('Client ID saved! Click Save again to upload.', 'success', 4000);
+});
+
+gdriveClearCreds.addEventListener('click', () => {
+  localStorage.removeItem('gdrive_client_id');
+  gdriveClientIn.value = '';
+  showToast('Credentials cleared', 'info');
+});
+
+/* ═══════════════════════════════════════════════════
+   GOOGLE DRIVE — SAVE CASE
+═══════════════════════════════════════════════════ */
+async function getGDriveToken() {
+  if (!window.google?.accounts?.oauth2) {
+    await loadScript(GIS_SRC);
+    // Wait for GIS to initialize
+    await new Promise(r => setTimeout(r, 800));
+  }
+  const clientId = localStorage.getItem('gdrive_client_id');
+  if (!clientId) return null;
+
+  return new Promise((resolve, reject) => {
+    const client = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: GDRIVE_SCOPE,
+      callback: resp => {
+        if (resp.error) reject(new Error(resp.error_description || resp.error));
+        else resolve(resp.access_token);
+      },
+    });
+    client.requestAccessToken({ prompt: '' });
+  });
+}
+
+async function uploadToDrive(accessToken, blob, docTitle) {
+  const metadata = {
+    name: docTitle,
+    mimeType: 'application/vnd.google-apps.document', // convert DOCX → Google Doc
+    parents: [GDRIVE_FOLDER_ID],
+  };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+  form.append('file', blob);
+
+  const res = await fetch(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink',
+    { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, body: form }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error?.message || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+saveCaseBtn.addEventListener('click', async () => {
+  const hasText = allTextareas.some(ta => ta.value.trim().length > 0);
+  const hasImgs = images.length > 0;
+  if (!hasText && !hasImgs) {
+    showToast('Add some content before saving', 'info');
+    return;
+  }
+
+  // Show setup if no client ID
+  if (!localStorage.getItem('gdrive_client_id')) {
+    openGDriveModal();
+    return;
+  }
+
+  const overlay = showOverlay('Saving to Google Drive…');
+  try {
+    const token = await getGDriveToken();
+    if (!token) { openGDriveModal(); overlay.remove(); return; }
+
+    // Build DOCX with full case info (bitácora + screenshots)
+    const blob = await generateDocxBlob({ includeCaseInfo: true });
+
+    // Doc title = Resolution field (first 100 chars, sanitized)
+    const resolution = resolutionText.value.trim();
+    const rawTitle   = resolution || nameText.value.trim() || 'Case Report';
+    const docTitle   = rawTitle.replace(/[<>:"/\\|?*\n\r]/g,' ').trim().substring(0, 100) || 'Case Report';
+
+    const result = await uploadToDrive(token, blob, docTitle);
+    showToast('✅ Saved to Google Drive!', 'success', 6000);
+
+    if (result.webViewLink) {
+      setTimeout(() => window.open(result.webViewLink, '_blank'), 700);
+    }
+  } catch (err) {
+    console.error('Drive save error:', err);
+    const msg = err.message || 'Unknown error';
+    if (msg.toLowerCase().includes('invalid_client') || msg.toLowerCase().includes('unauthorized_client')) {
+      localStorage.removeItem('gdrive_client_id');
+      showToast('Invalid Client ID — please reconfigure Google Drive', 'error', 6000);
+    } else if (msg.toLowerCase().includes('access_denied')) {
+      showToast('Access denied — please authorize Google Drive access and try again', 'error', 6000);
+    } else {
+      showToast(`Drive error: ${msg}`, 'error', 6000);
+    }
+  } finally {
+    overlay.remove();
+  }
+});
+
+/* ═══════════════════════════════════════════════════
+   LIGHTBOX
+═══════════════════════════════════════════════════ */
+let lightboxEl = null, currentLbIdx = -1;
 
 function openLightbox(idx) { currentLbIdx = idx; renderLightbox(); }
 
 function renderLightbox() {
   closeLightbox(false);
   const { dataUrl, caption, name } = images[currentLbIdx];
-
-  const lb = document.createElement('div');
-  lb.className = 'lightbox';
+  const lb = document.createElement('div'); lb.className = 'lightbox';
   lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
 
-  const closeBtn     = document.createElement('button');
-  closeBtn.className = 'lightbox-close';
-  closeBtn.innerHTML = '\u2715';
-  closeBtn.title     = 'Close (Esc)';
-  closeBtn.addEventListener('click', closeLightbox);
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'lightbox-close'; closeBtn.innerHTML = '✕';
+  closeBtn.title = 'Close (Esc)'; closeBtn.addEventListener('click', closeLightbox);
 
-  const counter       = document.createElement('div');
-  counter.className   = 'lightbox-counter';
+  const counter = document.createElement('div'); counter.className = 'lightbox-counter';
   counter.textContent = `${currentLbIdx + 1} / ${images.length}`;
 
-  const wrap     = document.createElement('div');
-  wrap.className = 'lightbox-img-wrap';
-
-  const img  = document.createElement('img');
-  img.src    = dataUrl;
-  img.alt    = name || 'Screenshot';
+  const wrap = document.createElement('div'); wrap.className = 'lightbox-img-wrap';
+  const img  = document.createElement('img'); img.src = dataUrl; img.alt = name || 'Screenshot';
   wrap.appendChild(img);
 
   const capText = caption || name || '';
   if (capText) {
-    const cap       = document.createElement('div');
-    cap.className   = 'lightbox-caption';
-    cap.textContent = capText;
-    wrap.appendChild(cap);
+    const cap = document.createElement('div'); cap.className = 'lightbox-caption';
+    cap.textContent = capText; wrap.appendChild(cap);
   }
 
-  lb.appendChild(counter);
-  lb.appendChild(closeBtn);
-  lb.appendChild(wrap);
-  document.body.appendChild(lb);
-  lightboxEl = lb;
+  lb.appendChild(counter); lb.appendChild(closeBtn); lb.appendChild(wrap);
+  document.body.appendChild(lb); lightboxEl = lb;
 }
 
 function closeLightbox(animate = true) {
@@ -641,14 +824,12 @@ function closeLightbox(animate = true) {
   if (animate) {
     lightboxEl.style.animation = 'lbFadeIn 0.15s ease reverse';
     setTimeout(() => { lightboxEl?.remove(); lightboxEl = null; }, 140);
-  } else {
-    lightboxEl.remove(); lightboxEl = null;
-  }
+  } else { lightboxEl.remove(); lightboxEl = null; }
 }
 
 document.addEventListener('keydown', e => {
   if (!lightboxEl) return;
-  if (e.key === 'Escape')      closeLightbox();
+  if (e.key === 'Escape') closeLightbox();
   if (e.key === 'ArrowRight' && currentLbIdx < images.length - 1) { currentLbIdx++; renderLightbox(); }
   if (e.key === 'ArrowLeft'  && currentLbIdx > 0)                  { currentLbIdx--; renderLightbox(); }
 });
@@ -661,20 +842,16 @@ let isResizing = false, startX = 0, startWidth = 0;
 panelDivider.addEventListener('mousedown', e => {
   isResizing = true; startX = e.clientX; startWidth = panelLeft.offsetWidth;
   panelDivider.classList.add('dragging');
-  document.body.style.cursor     = 'col-resize';
-  document.body.style.userSelect = 'none';
+  document.body.style.cursor = 'col-resize'; document.body.style.userSelect = 'none';
 });
 document.addEventListener('mousemove', e => {
   if (!isResizing) return;
-  const newW = Math.min(Math.max(startWidth + (e.clientX - startX), 280), 680);
-  panelLeft.style.width = newW + 'px';
+  panelLeft.style.width = Math.min(Math.max(startWidth + (e.clientX - startX), 280), 680) + 'px';
 });
 document.addEventListener('mouseup', () => {
   if (!isResizing) return;
-  isResizing = false;
-  panelDivider.classList.remove('dragging');
-  document.body.style.cursor     = '';
-  document.body.style.userSelect = '';
+  isResizing = false; panelDivider.classList.remove('dragging');
+  document.body.style.cursor = ''; document.body.style.userSelect = '';
 });
 
 /* ═══════════════════════════════════════════════════
