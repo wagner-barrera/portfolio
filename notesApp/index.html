@@ -12,11 +12,11 @@
   </head>
 
   <body>
-    <!-- Background mesh -->
     <div class="bg-mesh"></div>
 
     <div class="app-wrapper">
-      <!-- ═══════════════════ HEADER ═══════════════════ -->
+
+      <!-- HEADER -->
       <header class="app-header">
         <div class="header-brand">
           <span class="brand-icon">📋</span>
@@ -28,10 +28,10 @@
         </div>
       </header>
 
-      <!-- ═══════════════════ MAIN LAYOUT ═══════════════════ -->
+      <!-- MAIN LAYOUT -->
       <main class="main-layout">
 
-        <!-- ═══ LEFT PANEL — BITÁCORA ═══ -->
+        <!-- LEFT PANEL — BITÁCORA -->
         <section class="panel panel-left" id="panelLeft">
           <div class="panel-header">
             <h2 class="panel-title">
@@ -47,8 +47,9 @@
                 <span class="btn-icon btn-copy-icon">📋</span>
                 <span class="btn-label">Copy</span>
               </button>
-              <button class="btn btn-save" id="saveCaseBtn" type="button" title="Save complete case to Google Drive">
-                <span class="btn-icon">☁️</span>
+              <button class="btn btn-save" id="saveCaseBtn" type="button"
+                title="Download complete case as DOCX (bitácora + screenshots)">
+                <span class="btn-icon">💾</span>
                 <span class="btn-label">Save</span>
               </button>
             </div>
@@ -56,72 +57,51 @@
 
           <div class="fields-container">
 
-            <!-- Customer -->
             <div class="field-group">
               <label class="field-label" for="nameText">
                 <span class="label-dot dot-blue"></span>
                 Customer Information
               </label>
-              <textarea
-                id="nameText"
-                class="field-input"
-                placeholder="Name, account, contact details..."
-                rows="3"
-              ></textarea>
+              <textarea id="nameText" class="field-input"
+                placeholder="Name, account, contact details..." rows="3"></textarea>
             </div>
 
-            <!-- Issue -->
             <div class="field-group">
               <label class="field-label" for="issueText">
                 <span class="label-dot dot-red"></span>
                 Issue
               </label>
-              <textarea
-                id="issueText"
-                class="field-input"
-                placeholder="Describe the reported issue..."
-                rows="4"
-              ></textarea>
+              <textarea id="issueText" class="field-input"
+                placeholder="Describe the reported issue..." rows="4"></textarea>
             </div>
 
-            <!-- Action -->
             <div class="field-group">
               <label class="field-label" for="actionText">
                 <span class="label-dot dot-yellow"></span>
                 Action
               </label>
-              <textarea
-                id="actionText"
-                class="field-input"
-                placeholder="Steps taken to address the issue..."
-                rows="13"
-              ></textarea>
+              <textarea id="actionText" class="field-input"
+                placeholder="Steps taken to address the issue..." rows="13"></textarea>
             </div>
 
-            <!-- Resolution -->
             <div class="field-group">
               <label class="field-label" for="resolutionText">
                 <span class="label-dot dot-green"></span>
                 Resolution
               </label>
-              <textarea
-                id="resolutionText"
-                class="field-input"
-                placeholder="Final resolution or outcome..."
-                rows="4"
-              ></textarea>
+              <textarea id="resolutionText" class="field-input"
+                placeholder="Final resolution or outcome..." rows="4"></textarea>
             </div>
 
           </div>
-
         </section>
 
-        <!-- ═══ DIVIDER ═══ -->
+        <!-- DIVIDER -->
         <div class="panel-divider" id="panelDivider">
           <div class="divider-handle"></div>
         </div>
 
-        <!-- ═══ RIGHT PANEL — CANVAS ═══ -->
+        <!-- RIGHT PANEL — CANVAS -->
         <section class="panel panel-right" id="panelRight">
           <div class="panel-header">
             <h2 class="panel-title">
@@ -129,7 +109,6 @@
               Visual Canvas
             </h2>
             <div class="panel-actions">
-              <!-- PDF quality selector -->
               <div class="quality-picker" title="PDF image quality">
                 <span class="quality-label">Quality</span>
                 <div class="quality-options">
@@ -143,22 +122,15 @@
                 <span class="btn-icon">🗑️</span>
                 Clear
               </button>
-              <button class="btn btn-docx" id="downloadDocxBtn" type="button" title="Download as Word document (.docx)" disabled>
-                <span class="btn-icon">📄</span>
-                <span class="btn-label">DOCX</span>
-              </button>
-              <button class="btn btn-gdocs" id="openGoogleDocBtn" type="button" title="Download DOCX and open in Google Docs" disabled>
-                <span class="btn-icon">📝</span>
-                <span class="btn-label">Docs</span>
-              </button>
-              <button class="btn btn-accent" id="downloadPdfBtn" type="button" title="Download as pageless PDF" disabled>
+              <button class="btn btn-accent" id="downloadPdfBtn" type="button"
+                title="Download screenshots as pageless PDF" disabled>
                 <span class="btn-icon">⬇️</span>
                 <span class="btn-label">PDF</span>
               </button>
             </div>
           </div>
 
-          <!-- Drop zone hint shown when canvas is empty -->
+          <!-- Drop zone -->
           <div class="canvas-dropzone" id="canvasDropzone">
             <div class="dropzone-inner">
               <div class="dropzone-icon">🖼️</div>
@@ -169,13 +141,9 @@
             </div>
           </div>
 
-          <!-- Canvas scroll area -->
+          <!-- Canvas scroll -->
           <div class="canvas-scroll" id="canvasScroll" style="display:none;">
-            <div class="canvas-images" id="canvasImages">
-              <!-- Images inserted here dynamically -->
-            </div>
-
-            <!-- Floating add button -->
+            <div class="canvas-images" id="canvasImages"></div>
             <div class="canvas-add-bar">
               <input type="file" id="fileInputExtra" accept="image/*" multiple hidden />
               <button class="btn btn-ghost btn-sm" id="addMoreBtn" type="button">
@@ -188,42 +156,8 @@
       </main>
     </div>
 
-    <!-- Toast notification -->
     <div class="toast" id="toast"></div>
 
-    <!-- ═══ GOOGLE DRIVE SETUP MODAL ═══ -->
-    <div class="gdrive-modal-backdrop" id="gdriveModalBackdrop" style="display:none;">
-      <div class="gdrive-modal" role="dialog" aria-modal="true" aria-labelledby="gdriveModalTitle">
-        <div class="gdrive-modal-header">
-          <span class="gdrive-modal-icon">🔑</span>
-          <h3 id="gdriveModalTitle">Connect to Google Drive</h3>
-        </div>
-        <p class="gdrive-modal-desc">
-          To save cases directly to your Drive, you need a Google OAuth Client ID.
-          This is a one-time setup — your ID is stored only in this browser.
-        </p>
-        <ol class="gdrive-setup-steps">
-          <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console → Credentials</a></li>
-          <li>Create a project (or select existing) and enable the <strong>Drive API</strong></li>
-          <li>Click <strong>Create Credentials → OAuth 2.0 Client ID</strong> → Web Application</li>
-          <li>Under <em>Authorized JavaScript origins</em>, add <code>https://wagnerbarrera.com</code></li>
-          <li>Copy your <strong>Client ID</strong> (ends in <code>.apps.googleusercontent.com</code>)</li>
-        </ol>
-        <div class="gdrive-input-group">
-          <label for="gdriveClientIdInput">Client ID</label>
-          <input type="text" id="gdriveClientIdInput" class="gdrive-client-input"
-            placeholder="xxxxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false" />
-        </div>
-        <div class="gdrive-modal-actions">
-          <button class="btn btn-secondary" id="gdriveModalCancel" type="button">Cancel</button>
-          <button class="btn btn-save" id="gdriveModalSave" type="button">Save &amp; Connect</button>
-        </div>
-        <p class="gdrive-modal-note">
-          Already configured? <button class="link-btn" id="gdriveClearCreds">Clear saved credentials</button>
-        </p>
-      </div>
-    </div>
-
-    <script src="scripts.js?v=932" defer></script>
+    <script src="scripts.js?v=9326b" defer></script>
   </body>
 </html>
