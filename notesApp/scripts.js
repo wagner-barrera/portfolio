@@ -130,8 +130,22 @@ copyButton.addEventListener('click', async () => {
 });
 
 clearButton.addEventListener('click', () => {
+  const hasImages = images.length > 0;
+  const hasText   = allTextareas.some(ta => ta.value.trim().length > 0);
+  if (!hasText && !hasImages) return;
+
+  if (hasImages) {
+    if (!confirm(`Clear the log and remove all ${images.length} screenshot${images.length !== 1 ? 's' : ''} from the canvas?`)) return;
+  }
+
   allTextareas.forEach(ta => (ta.value = ''));
-  updatePreview(); showToast('Fields cleared', 'info'); nameText.focus();
+  updatePreview();
+
+  images = []; canvasImages.innerHTML = '';
+  updateCanvasCount(); maybeShowDropzone();
+
+  showToast('Log and canvas cleared', 'info');
+  nameText.focus();
 });
 
 allTextareas.forEach(ta => ta.addEventListener('input', updatePreview));
